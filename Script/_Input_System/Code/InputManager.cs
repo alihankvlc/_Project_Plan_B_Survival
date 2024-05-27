@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace _Project_Plan_B_Input_System.Code
+namespace _Project_Plan_B_Survival_Input_System.Code
 {
     public interface IPlayerInputProvider
     {
