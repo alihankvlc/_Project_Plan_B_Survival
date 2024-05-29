@@ -82,7 +82,7 @@ namespace _Project_Plan_B_Survival_Database.Code
             if (Cache.TryGetValue(id, out T2 existingData))
                 return existingData;
 
-            Debug.Log($"Database in id={id} null ? ?? ");
+            Logger.Log.Error(this, $"Data not found: {id}", Color.cyan);
             return default(T2);
         }
     }

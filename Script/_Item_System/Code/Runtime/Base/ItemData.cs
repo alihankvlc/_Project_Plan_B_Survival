@@ -87,6 +87,11 @@ namespace _Project_Plan_B_Survival_Item_System.Runtime.Base
             RemoveItemDataFromDatabase();
         }
 
+        private void OnValidate()
+        {
+            if (!_isStackable) _stackCapacity = 1;
+        }
+
         private void RemoveItemDataFromDatabase()
         {
             ItemDatabase.Instance.RemoveItem(_dataId);
@@ -100,6 +105,7 @@ namespace _Project_Plan_B_Survival_Item_System.Runtime.Base
 
         [Header("Data Settings")]
         [SerializeField] private int _dataId;
+        [SerializeField] private int _weight;
         [SerializeField, ReadOnly] public virtual ItemType _itemType { get; protected set; }
         [SerializeField] private bool _isStackable;
         [SerializeField, ShowIf("@_isStackable")] private int _stackCapacity;
@@ -111,9 +117,10 @@ namespace _Project_Plan_B_Survival_Item_System.Runtime.Base
         public string Description => _displayDescription;
         public Sprite Icon => _icon;
         public ItemType ItemType => _itemType;
-        public bool IsStackable => _isStackable;
+        public bool Stackable => _isStackable;
         public bool IsSrappable => _isScrappable;
         public int StackCapacity => _stackCapacity;
+        public int Weight => _weight;
         public ObtainableType ObtainableType => _obtainableType;
 
         public void Set_Item_Id(int id)
@@ -149,6 +156,10 @@ namespace _Project_Plan_B_Survival_Item_System.Runtime.Base
         public void Set_Item_Stack_Capacity(int amount)
         {
             _stackCapacity = amount;
+        }
+        public void Set_Item_Weight(int weight)
+        {
+            _weight = weight;
         }
 
         public void Set_Item_IsSrappable(bool param)

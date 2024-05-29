@@ -28,6 +28,7 @@ namespace _Project_Plan_B_Survival_Item_System.Editor
         private ObtainableType _obtainableType;
 
         private int _dataId;
+        private int _weight;
         private int _stackCapacity;
         private bool _isStackable;
 
@@ -71,6 +72,7 @@ namespace _Project_Plan_B_Survival_Item_System.Editor
             _itemType = (ItemType)EditorGUILayout.EnumPopup("Item Type", _itemType);
             _obtainableType = (ObtainableType)EditorGUILayout.EnumFlagsField("Obtainable", _obtainableType);
             _dataId = EditorGUILayout.IntField("Data Id", _dataId);
+            _weight = EditorGUILayout.IntField("Weight", _weight);
             _isScrappable = EditorGUILayout.Toggle("Scrappable", _isScrappable);
             _isStackable = EditorGUILayout.Toggle("Stackkable", _isStackable);
 
@@ -230,6 +232,7 @@ namespace _Project_Plan_B_Survival_Item_System.Editor
             itemData.Set_Item_Stack_Capacity(!_isStackable ? 1 : _stackCapacity);
             itemData.Set_Item_IsSrappable(_isScrappable);
             itemData.Set_Item_ObtainableType(_obtainableType);
+            itemData.Set_Item_Weight(_weight);
 
             return itemData;
         }
