@@ -10,7 +10,7 @@ namespace _Project_Plan_B_Survival_Database.Code
     public interface IData
     {
         public int Id { get; }
-        public string Name { get; }
+        public string DisplayName { get; }
         public string Description { get; }
         public Sprite Icon { get; }
     }

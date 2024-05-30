@@ -113,7 +113,7 @@ namespace _Project_Plan_B_Survival_Item_System.Runtime.Base
         [SerializeField] private ObtainableType _obtainableType;
 
         public int Id => _dataId;
-        public string Name => _displayName;
+        public string DisplayName => _displayName;
         public string Description => _displayDescription;
         public Sprite Icon => _icon;
         public ItemType ItemType => _itemType;

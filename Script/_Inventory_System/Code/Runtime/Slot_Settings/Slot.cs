@@ -1,16 +1,22 @@
+using _Project_Plan_B_Survival_Inventory_System.Code.Runtime.Common;
 using Sirenix.OdinInspector;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace _Project_Plan_B_Survival_Inventory_System.Code.Runtime.Slot_Settings
 {
     public enum SlotType { Inventory, ToolBelt }
     public enum SlotStatus { Empty, Occupied, Locked }
 
-    public class Slot : SerializedMonoBehaviour
+    public class Slot : SerializedMonoBehaviour, IDropHandler
     {
         [Header("Slot Settings")]
         [SerializeField] private SlotStatus _status;
         [SerializeField] private int _slotIndex;
+        [SerializeField] private SlotItem _slotItem;
+
+        private IPlayerInventory _inventory;
+
 
         [SerializeField, ReadOnly]
         public virtual SlotType Type
@@ -18,10 +24,23 @@ namespace _Project_Plan_B_Survival_Inventory_System.Code.Runtime.Slot_Settings
             get;
             protected set;
         }
-
+            
+        private void Awake() => _inventory = Inventory.Instance;
+        public SlotItem SlotInItem => _slotItem;
         public int Index => _slotIndex;
         public SlotStatus Status => _status;
         public void SetSlotStatus(SlotStatus status) => _status = status;
+        public void SetSlotIndex(int index) => _slotIndex = index;
+        public void SetSlotItem(SlotItem slotItem) => _slotItem = slotItem;
+        public void SetSlotType(SlotType slotType) => Type = slotType;
+
+        public void OnDrop(PointerEventData eventData)
+        {
+            GameObject droppedObject = eventData.pointerDrag;
+            SlotItem draggingSlot = droppedObject.GetComponent<SlotItem>();
+
+            _inventory.SwapItem(draggingSlot.Slot.Index, _slotIndex);
+        }
     }
 }
 

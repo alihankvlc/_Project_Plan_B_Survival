@@ -29,8 +29,6 @@ namespace _Project_Plan_B_Survival_Inventory_System.Code.Runtime.Common
         public static event Action<int> OnChangeInventoryWeight;
         public static event Action OnMaxCapacityReached;
 
-        public InventoryWeight(int maxWeight) => SetMaxWeight(maxWeight);
-
         public void SetMaxWeight(int maxWeight) => _maxWeight = maxWeight;
 
         public void DecreaseWeight(int amount, ref int weight)

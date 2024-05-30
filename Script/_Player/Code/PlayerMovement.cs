@@ -60,7 +60,7 @@ namespace _Project_Plan_B_Player.Code
 
         private void HandleRotation()
         {
-            if (_input.OnAim)
+            if (_input.Aim)
                 RotateTowardsMouse();
             else if (GetMoveDirection() != Vector3.zero)
                 RotateTowardsMovement();
@@ -101,7 +101,7 @@ namespace _Project_Plan_B_Player.Code
 
         private Vector3 GetMoveDirection()
         {
-            Vector3 moveDirection = new Vector3(_input.OnMove.x, 0, _input.OnMove.y);
+            Vector3 moveDirection = new Vector3(_input.Move.x, 0, _input.Move.y);
             _animator.SetFloat(MOVE_HASH_ID, Vector3.ClampMagnitude(moveDirection, 1).magnitude, _animDampTime, Time.deltaTime * 30f);
             return moveDirection;
         }

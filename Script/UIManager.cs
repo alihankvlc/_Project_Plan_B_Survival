@@ -1,8 +1,11 @@
 using _Project_Plan_B_Common;
+using _Project_Plan_B_Survival_Inventory_System.Code.Runtime.Common;
 using _Project_Plan_B_Survival_Inventory_System.Code.Runtime.UI;
 using _Project_Plan_B_Survival_Item_System.Runtime.Base;
+using DG.Tweening;
 using System.Collections.Generic;
 using System.Linq;
+using TMPro;
 using UnityEngine;
 
 namespace _Project_Plan_B_Survival
@@ -14,9 +17,16 @@ namespace _Project_Plan_B_Survival
         [SerializeField] private UIAddItemToInventoryInfo _uiAddItemToInventoryInfo;
         [SerializeField] private Transform _uiAddItemToInventoryParent;
 
+        [Header("UI System Message Settings")]
+        [SerializeField] private TextMeshProUGUI _systemMessageTextMesh;
+
+        private Tween _fadeInTween;
+        private const float FADE_IN_DELAY_DURATION = 2f;
+
         private void Start()
         {
             Inventory.OnItemAddedToInventory += ItemAddedToInventory;
+            Logger.LogAction += ShowToPlayerMessage;
         }
         public void RemoveInformationProvider(UIAddItemToInventoryInfo provider)
         {
@@ -40,7 +50,7 @@ namespace _Project_Plan_B_Survival
 
             infoComponent.OnDisable += RemoveInformationProvider;
 
-            infoComponent.Init(data.Icon, data.Id, count);
+            infoComponent.Constructor(data.Icon, data.Id, count);
             _uiAddItemToInventoryInfos.Add(infoComponent);
         }
         private bool HasInformation(ItemData data, out UIAddItemToInventoryInfo info)
@@ -49,9 +59,35 @@ namespace _Project_Plan_B_Survival
             return info != null;
         }
 
+        private void ShowToPlayerMessage(string message)
+        {
+            GameObjectEnableFadeIn(_systemMessageTextMesh.gameObject, 0.5f);
+            _systemMessageTextMesh.SetText(message);
+        }
+
+
+        private void GameObjectEnableFadeIn(GameObject gameObject, float time)
+        {
+            SetEnableGameObject(gameObject, true);
+
+            if (_fadeInTween != null && _fadeInTween.IsActive())
+                _fadeInTween.Kill();
+
+            _fadeInTween = gameObject.transform.DOScale(1, time).OnComplete(() => SetEnableGameObject(gameObject, false));
+            _fadeInTween.SetDelay(FADE_IN_DELAY_DURATION);
+        }
+
+
+
+        private void SetEnableGameObject(GameObject obj, bool isEnable)
+        {
+            obj.SetActive(isEnable);
+        }
+
         private void OnDestroy()
         {
             Inventory.OnItemAddedToInventory -= ItemAddedToInventory;
+            Logger.LogAction -= ShowToPlayerMessage;
         }
     }
 }

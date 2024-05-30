@@ -48,7 +48,7 @@ namespace _Project_Plan_B_Survival_Inventory_System.Code.Runtime.UI
                 _fadeTweener = _canvasGroup.DOFade(0, 1f).OnComplete(DisableAndDestroy);
         }
 
-        public void Init(Sprite icon, int itemId, int count = 1)
+        public void Constructor(Sprite icon, int itemId, int count = 1)
         {
             _icon.sprite = icon;
             _itemId = itemId;

@@ -1,123 +1,236 @@
 using _Project_Plan_B_Survival_Item_System.Runtime.Base;
 using _Project_Plan_B_Survival_Item_System.Runtime.Database;
-using Sirenix.OdinInspector;
+using _Project_Plan_B_Survival_Inventory_System.Code.Runtime.Slot_Settings;
+using _Project_Plan_B_Common;
 using System;
-using System.Collections.Generic;
 using System.Linq;
+using System.Collections.Generic;
+using Sirenix.OdinInspector;
 using Zenject;
 using UnityEngine;
-using _Project_Plan_B_Survival_Inventory_System.Code.Runtime.Common;
-using _Project_Plan_B_Survival_Inventory_System.Code.Runtime.Slot_Settings;
 
-
-public interface IPlayerInventory
+namespace _Project_Plan_B_Survival_Inventory_System.Code.Runtime.Common
 {
-    public void AddItemToInventory(int itemId, int count = 1);
-    public int Weight { get; }
-    public bool IsFull { get; }
-}
-
-public class Inventory : MonoBehaviour, IPlayerInventory
-{
-    [Header("Inventory  Settings")]
-    [SerializeField] private int _maxWeight = 40;
-    [SerializeField, ReadOnly] private int _currentWeight;
-    [SerializeField, ReadOnly] private bool _isFull;
-
-    [Header("Item Data Settings")]
-    [SerializeField, InlineEditor] private List<SlotItem> _slotsInItems = new();
-
-    [Header("Slot Item Settings Content")]
-    [SerializeField] private List<Slot> _slots = new();
-    [SerializeField] private SlotItem _slotItem;
-
-    private ItemDatabaseProvider _itemDatabase;
-    private InventoryWeight _inventoryWeight;
-    private SlotFinder _slotFinder;
-
-    public bool IsFull
+    public interface IPlayerInventory
     {
-        get => _isFull;
-        private set => _isFull = value;
+        public void AddItemToInventory(int itemId, int count = 1);
+        public void RemoveItemFromInventory(int index, bool allDestroy = false, int count = 1);
+        public void SwapItem(int currentSlotIndex, int nextSlotIndex);
+        public void MoveSlotItem(Slot currentSlot, Slot nextSlot, SlotItem currentSlotItem);
+        public bool HasItemInInventory(int itemId, out SlotItem slotItem);
+        public bool HasItemInSlotOfType(SlotType type, out List<SlotItem> slotItem);
+        public bool GetItemInSlotByIndex(int index, out SlotItem slotItem);
+        public int Weight { get; }
+        public bool IsFull { get; }
     }
 
-    public int Weight => _currentWeight;
-
-    public static event Action<ItemData, int> OnItemAddedToInventory;
-
-
-    [Inject]
-    private void Constructor(ItemDatabaseProvider itemDatabase)
+    public class Inventory : Singleton<Inventory>, IPlayerInventory
     {
-        _slotFinder = new(_slots);
-        _inventoryWeight = new(_maxWeight);
+        [Header("Inventory Settings")]
+        [SerializeField, ReadOnly] private int _currentWeight;
+        [SerializeField, ReadOnly] private bool _isFull;
 
-        _itemDatabase = itemDatabase;
-    }
+        [Space, Header("Item Data Settings")]
+        [SerializeField, InlineEditor] private List<SlotItem> _slotsInItems = new List<SlotItem>();
 
-    private void Update()
-    {
-        _isFull = _slotsInItems.Count >= _slots.Count;
+        private ItemDatabaseProvider _itemDatabase;
+        private InventoryWeight _weightHandler;
+        private SlotHandler _slotHandler;
 
-        if (Input.GetKeyDown(KeyCode.R))
+        public bool IsFull => _isFull;
+        public int Weight => _currentWeight;
+
+        public static event Action<ItemData, int> OnItemAddedToInventory;
+
+
+        [Inject]
+        private void Constructor(ItemDatabaseProvider itemDatabase, SlotHandler slotHandler, InventoryWeight weightHandler)
         {
-            AddItemToInventory(itemId: 5, 10);
-        }
-    }
-
-    public void AddItemToInventory(int itemId, int count = 1)
-    {
-        ItemData data = _itemDatabase.GetItemData(itemId);
-        if (data == null)
-        {
-            Logger.Log.Warning(this, $"Item with id {itemId} not found in database", Color.cyan);
-            return;
+            _itemDatabase = itemDatabase;
+            _slotHandler = slotHandler;
+            _weightHandler = weightHandler;
         }
 
-        while (count > 0)
+        private void Update()
         {
-            if (data.Stackable)
+            _isFull = _slotsInItems.Count >= _slotHandler.Slots.Count;
+
+            if (Input.GetKeyDown(KeyCode.R)) AddItemToInventory(1, 1);
+            if (Input.GetKeyDown(KeyCode.T)) AddItemToInventory(2, 2);
+        }
+
+        public void AddItemToInventory(int itemId, int count = 1)
+        {
+            ItemData itemData = _itemDatabase.GetItemData(itemId);
+            if (itemData == null)
             {
-                SlotItem slotItem = _slotsInItems.FirstOrDefault(r => r.Data == data && r.SlotInItemCount < data.StackCapacity);
-
-                if (slotItem != null)
-                {
-                    int availableSpace = data.StackCapacity - slotItem.SlotInItemCount;
-                    int amountToStack = Mathf.Min(count, availableSpace);
-
-                    slotItem.StackItem(StackType.Increse, amountToStack);
-                    OnItemAddedToInventory?.Invoke(data, amountToStack);
-
-                    _inventoryWeight.IncreaseWeight(data.Weight * amountToStack, ref _currentWeight);
-                    count -= amountToStack;
-                    continue;
-                }
+                Logger.Log.Warning(this, $"Item with id {itemId} not found in database", Color.cyan);
+                return;
             }
 
-            if (_isFull) break;
+            while (count > 0)
+            {
+                if (itemData.Stackable)
+                {
+                    SlotItem slotItem = _slotsInItems.FirstOrDefault(si => si.Data == itemData && si.SlotInItemCount < itemData.StackCapacity);
+                    if (slotItem != null)
+                    {
+                        int availableSpace = itemData.StackCapacity - slotItem.SlotInItemCount;
+                        int amountToStack = Mathf.Min(count, availableSpace);
+                        slotItem.StackItem(StackType.Increase, amountToStack);
+                        UpdateInventoryWeight(itemData.Weight * amountToStack);
+                        OnItemAddedToInventory?.Invoke(itemData, amountToStack);
+                        count -= amountToStack;
+                        continue;
+                    }
+                }
 
-            int amountToAdd = Mathf.Min(count, data.StackCapacity);
-            count -= amountToAdd;
+                if (_isFull) break;
 
-            AddItemToNewSlot(data, amountToAdd);
+                int amountToAdd = Mathf.Min(count, itemData.StackCapacity);
+                AddItemToNewSlot(itemData, amountToAdd);
+                count -= amountToAdd;
+            }
+        }
+
+        public void RemoveItemFromInventory(int index, bool allDestroy = false, int count = 1)
+        {
+            SlotItem slotItem;
+            if (GetItemInSlotByIndex(index, out slotItem))
+            {
+                int decreaseCount = slotItem.SlotInItemCount;
+                slotItem.StackItem(StackType.Decrease, allDestroy ? decreaseCount : count);
+                UpdateInventoryWeight(-slotItem.Data.Weight * (allDestroy ? decreaseCount : count));
+
+                if (slotItem.SlotInItemCount == 0)
+                {
+                    slotItem.Slot.SetSlotStatus(SlotStatus.Empty);
+                    _slotsInItems.Remove(slotItem);
+                    Destroy(slotItem.gameObject);
+                }
+            }
+        }
+
+        public void SwapItem(int currentSlotIndex, int nextSlotIndex)
+        {
+            Slot currentSlot = _slotHandler.Slots.FirstOrDefault(s => s.Index == currentSlotIndex);
+            Slot nextSlot = _slotHandler.Slots.FirstOrDefault(s => s.Index == nextSlotIndex);
+
+            if (currentSlot == null || nextSlot == null)
+                return;
+
+            SlotItem currentSlotItem = currentSlot.SlotInItem;
+            SlotItem nextSlotItem = nextSlot.SlotInItem;
+
+            if (currentSlotItem == null)
+                return;
+
+            if (nextSlotItem == null)
+            {
+                MoveSlotItem(currentSlot, nextSlot, currentSlotItem);
+                return;
+            }
+
+            if (currentSlotItem.Data.Id != nextSlotItem.Data.Id)
+            {
+                SwapSlotItems(currentSlot, nextSlot, currentSlotItem, nextSlotItem);
+                return;
+            }
+
+            ProcessSameTypeItems(currentSlot, nextSlot, currentSlotItem, nextSlotItem);
+        }
+
+        public void MoveSlotItem(Slot currentSlot, Slot nextSlot, SlotItem currentSlotItem)
+        {
+            currentSlotItem.MoveToSlot(nextSlot);
+            currentSlot.SetSlotStatus(SlotStatus.Empty);
+            nextSlot.SetSlotStatus(SlotStatus.Occupied);
+
+            nextSlot.SetSlotItem(currentSlotItem);
+            currentSlot.SetSlotItem(null);
+        }
+
+        public bool HasItemInInventory(int itemId, out SlotItem slotItem)
+        {
+            slotItem = _slotsInItems.FirstOrDefault(si => si.Data.Id == itemId);
+            return slotItem != null;
+        }
+
+        public bool HasItemInSlotOfType(SlotType type, out List<SlotItem> slotItems)
+        {
+            slotItems = _slotsInItems.Where(si => si.Slot.Type == type).ToList();
+            return slotItems.Count > 0;
+        }
+
+        public bool GetItemInSlotByIndex(int index, out SlotItem slotItem)
+        {
+            slotItem = _slotsInItems.FirstOrDefault(si => si.Slot.Index == index);
+            return slotItem != null;
+        }
+
+        private void ProcessSameTypeItems(Slot currentSlot, Slot nextSlot, SlotItem currentSlotItem, SlotItem nextSlotItem)
+        {
+            if (!currentSlotItem.Data.Stackable || !nextSlotItem.Data.Stackable)
+                return;
+
+            int stackableSpace = nextSlotItem.Data.StackCapacity - nextSlotItem.SlotInItemCount;
+
+            if (stackableSpace == 0 || currentSlotItem.SlotInItemCount - currentSlotItem.Data.StackCapacity == 0)
+            {
+                SwapSlotItems(currentSlot, nextSlot, currentSlotItem, nextSlotItem);
+                Logger.Log.Warning(this, $"The destination slot is full. Item cannot be stacked further.", Color.cyan, showToPlayer: true);
+                return;
+            }
+
+            int amountToStack = Mathf.Min(currentSlotItem.SlotInItemCount, stackableSpace);
+            nextSlotItem.StackItem(StackType.Increase, amountToStack);
+            currentSlotItem.StackItem(StackType.Decrease, amountToStack);
+
+            if (currentSlotItem.SlotInItemCount <= 0)
+            {
+                currentSlot.SetSlotStatus(SlotStatus.Empty);
+                _slotsInItems.Remove(currentSlotItem);
+                Destroy(currentSlotItem.gameObject);
+            }
+        }
+
+        private void AddItemToNewSlot(ItemData data, int count)
+        {
+            Slot availableSlot = _slotHandler.FindAvailableSlot(data);
+            if (availableSlot == null) return;
+
+            GameObject displayItem = Instantiate(_slotHandler.SlotItem.gameObject, availableSlot.transform);
+            SlotItem slotItemContent = displayItem.GetComponent<SlotItem>();
+            displayItem.name = data.DisplayName;
+
+            slotItemContent.Constructor(data, availableSlot, count);
+            availableSlot.SetSlotStatus(SlotStatus.Occupied);
+            _slotsInItems.Add(slotItemContent);
+            UpdateInventoryWeight(data.Weight * count);
+
+            OnItemAddedToInventory?.Invoke(data, count);
+        }
+
+        private void SwapSlotItems(Slot currentSlot, Slot nextSlot, SlotItem currentSlotItem, SlotItem nextSlotItem)
+        {
+            currentSlotItem.MoveToSlot(nextSlot);
+            nextSlotItem.MoveToSlot(currentSlot);
+
+            SlotStatus tempStatus = currentSlot.Status;
+            currentSlot.SetSlotStatus(nextSlot.Status);
+            nextSlot.SetSlotStatus(tempStatus);
+
+            int currentIndex = _slotsInItems.IndexOf(currentSlotItem);
+            int nextIndex = _slotsInItems.IndexOf(nextSlotItem);
+
+            _slotsInItems[currentIndex] = nextSlotItem;
+            _slotsInItems[nextIndex] = currentSlotItem;
+        }
+
+        private void UpdateInventoryWeight(int weightChange)
+        {
+            _weightHandler.IncreaseWeight(weightChange, ref _currentWeight);
         }
     }
-
-    private void AddItemToNewSlot(ItemData data, int count)
-    {
-        Slot availableSlot = _slotFinder.FindAvailableSlot(data);
-
-        if (availableSlot == null)
-            return;
-
-        GameObject displayItem = Instantiate(_slotItem.gameObject, availableSlot.transform);
-        SlotItem slotItemContent = displayItem.GetComponent<SlotItem>();
-
-        _slotsInItems.Add(slotItemContent);
-        slotItemContent.Init(data, availableSlot, count);
-        availableSlot.SetSlotStatus(SlotStatus.Occupied);
-
-        _inventoryWeight.IncreaseWeight(data.Weight * count, ref _currentWeight);
-        OnItemAddedToInventory?.Invoke(data, count);
-    }
 }
+
