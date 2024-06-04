@@ -1,68 +1,71 @@
-using _Project_Plan_B_Survival_Item_System.Runtime.Base;
 using System.Collections.Generic;
 using System.Linq;
+using _Item_System_.Runtime.Base;
+using TMPro;
 using UnityEngine;
-using Zenject;
 
-namespace _Project_Plan_B_Survival_Inventory_System.Code.Runtime.Slot_Settings
+namespace _Inventory_System_.Code.Runtime.SlotManagment
 {
     [System.Serializable]
-    public class SlotHandler
+    public sealed class SlotHandler
     {
         private List<Slot> _slots;
-        private GameObject _slotPrefab;
         private SlotItem _slotItem;
 
         public List<Slot> Slots => _slots;
         public SlotItem SlotItem => _slotItem;
 
-        public void Init(List<Slot> slots, GameObject slotPrefab, SlotItem slotItem)
+        public void Init(List<Slot> slots, SlotItem slotItem)
         {
             _slots = slots;
-            _slotPrefab = slotPrefab;
             _slotItem = slotItem;
         }
 
         public Slot FindAvailableSlot(ItemData data)
         {
-            Slot availableSlot = _slots.FirstOrDefault(r => r.Type == SlotType.ToolBelt && r.Status == SlotStatus.Empty);
-
-            if (availableSlot == null)
-                availableSlot = _slots.FirstOrDefault(r => r.Type == SlotType.Inventory && r.Status == SlotStatus.Empty);
-
+            Slot availableSlot = _slots.FirstOrDefault(r => r.Type == SlotType.Inventory && r.Status == SlotStatus.Empty);
             availableSlot?.SetSlotStatus(SlotStatus.Occupied);
             return availableSlot;
         }
 
-        public void InitializeInventory(int size, int initialIndex, Transform inventoryPlaceHolder) =>
-            SpawnSlot(inventoryPlaceHolder, size, initialIndex, SlotType.Inventory);
+        public void InitializeInventory(GameObject prefab, int size, int initialIndex, Transform inventoryPlaceHolder) =>
+            SpawnSlot(prefab, inventoryPlaceHolder, size, initialIndex, SlotType.Inventory);
 
-        public void InitializeToolbelt(int size, int initialIndex, Transform toolbeltPlaceHolder) =>
-            SpawnSlot(toolbeltPlaceHolder, size, initialIndex, SlotType.ToolBelt);
+        public void InitializeToolBelt(GameObject prefab, int size, int initialIndex, Transform placeHolder) =>
+            SpawnSlot(prefab, placeHolder, size, initialIndex, SlotType.ToolBelt);
 
 
-        private void SpawnSlot(Transform parent, int size, int initialIndex, SlotType slotType)
+        private void SpawnSlot(GameObject prefab, Transform parent, int size, int initialIndex, SlotType slotType)
         {
             for (int i = 0; i < size; i++)
             {
-                GameObject slotPrefab = Object.Instantiate(_slotPrefab, parent);
+                GameObject slotPrefab = Object.Instantiate(prefab, parent);
 
-                Slot slot = AddSlotComponent(slotPrefab, slotType);
+                Slot slot = GetSlotComponent(slotPrefab, slotType);
                 slot.SetSlotIndex(i + initialIndex);
 
-                string slotName = $"{slotType.ToString()}_Slot_Index = {i + initialIndex}";
-                slotPrefab.transform.name = slotName;
+                string slotParentName = $"{slotType.ToString()}_SLOT = {i + initialIndex}";
+                string slotName = $"{slotType.ToString()}_SLOT_INDEX = {i}";
+
+                slotPrefab.transform.name = slotParentName;
+                slot.transform.name = slotName;
+
+                if (slotType == SlotType.ToolBelt)
+                {
+                    TextMeshProUGUI labelKeyIndex = slotPrefab.GetComponentInChildren<TextMeshProUGUI>();
+                    labelKeyIndex?.SetText((i + +1).ToString());
+                }
 
                 _slots?.Add(slot);
             }
         }
 
-        private Slot AddSlotComponent(GameObject slotObject, SlotType slotType)
+        private Slot GetSlotComponent(GameObject slotObject, SlotType slotType)
         {
             Slot slot = slotType switch
             {
-                SlotType.Inventory => slotObject.AddComponent<InventorySlot>(),
-                SlotType.ToolBelt => slotObject.AddComponent<ToolBeltSlot>(),
+                SlotType.Inventory => slotObject.GetComponentInChildren<InventorySlot>(),
+                SlotType.ToolBelt => slotObject.GetComponentInChildren<ToolBeltSlot>(),
                 _ => null
             };
 

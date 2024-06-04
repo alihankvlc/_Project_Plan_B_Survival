@@ -1,9 +1,9 @@
-using _Project_Plan_B_Survival_Inventory_System.Code.Runtime.Common;
+using _Inventory_System_.Code.Runtime.Common;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-namespace _Project_Plan_B_Survival_Inventory_System.Code.Runtime.Slot_Settings
+namespace _Inventory_System_.Code.Runtime.SlotManagment
 {
     public enum SlotType { Inventory, ToolBelt }
     public enum SlotStatus { Empty, Occupied, Locked }
@@ -24,7 +24,7 @@ namespace _Project_Plan_B_Survival_Inventory_System.Code.Runtime.Slot_Settings
             get;
             protected set;
         }
-            
+
         private void Awake() => _inventory = Inventory.Instance;
         public SlotItem SlotInItem => _slotItem;
         public int Index => _slotIndex;

@@ -1,11 +1,14 @@
-﻿using _Project_Plan_B_Survival_Item_System.Runtime.Base;
+using _Item_System_.Runtime.Base;
+using _Item_System_.Runtime.UI;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.EventSystems;
-namespace _Project_Plan_B_Survival_Inventory_System.Code.Runtime.Slot_Settings
+
+namespace _Inventory_System_.Code.Runtime.SlotManagment
 {
     public enum StackType { Increase, Decrease }
-    public class SlotItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
+    public sealed class SlotItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
+
     {
         [Header("Slot Settings")]
         [SerializeField, ReadOnly] private Slot _activeSlot;
@@ -17,9 +20,10 @@ namespace _Project_Plan_B_Survival_Inventory_System.Code.Runtime.Slot_Settings
 
         [Header("UI Settings")]
         [SerializeField] private ItemDisplay _display;
-
         private CanvasGroup _canvasGroup;
         private Slot _parentAfterSlot;
+
+        private RectTransform _reftTransform;
 
         public Transform ParentAfterDrag;
         public ItemData Data => _data;
@@ -38,6 +42,7 @@ namespace _Project_Plan_B_Survival_Inventory_System.Code.Runtime.Slot_Settings
         private void Awake()
         {
             _canvasGroup = GetComponent<CanvasGroup>();
+            _reftTransform = GetComponent<RectTransform>();
         }
 
         public void Constructor(ItemData data, Slot slot, int count = 1)
@@ -76,6 +81,7 @@ namespace _Project_Plan_B_Survival_Inventory_System.Code.Runtime.Slot_Settings
             _display.ItemImage.raycastTarget = true;
 
             transform.SetParent(ParentAfterDrag);
+            _reftTransform.localPosition = new Vector3(_reftTransform.localPosition.x, _reftTransform.localPosition.y, 0);
         }
         public void StackItem(StackType type, int stackChangeAmount = 1)
         {
@@ -91,7 +97,7 @@ namespace _Project_Plan_B_Survival_Inventory_System.Code.Runtime.Slot_Settings
             ParentAfterDrag = _activeSlot.transform;
 
             _activeSlot.SetSlotItem(this);
-            transform.SetParent(_activeSlot.transform, false);
+            transform.SetParent(_activeSlot.transform, true);
         }
     }
 }

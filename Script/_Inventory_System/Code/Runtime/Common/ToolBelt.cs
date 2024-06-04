@@ -1,10 +1,9 @@
 using Zenject;
 using UnityEngine;
-using _Project_Plan_B_Survival_Inventory_System.Code.Runtime.Slot_Settings;
 
-namespace _Project_Plan_B_Survival_Inventory_System.Code.Runtime.Common
+namespace _Inventory_System_.Code.Runtime.Common
 {
-    public class ToolBelt : MonoBehaviour
+    public sealed class ToolBelt : MonoBehaviour
     {
         private IPlayerInventory _inventory;
 

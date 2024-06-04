@@ -1,7 +1,7 @@
 ﻿using Sirenix.OdinInspector;
 using UnityEngine;
 
-namespace _Project_Plan_B_Survival_Item_System.Runtime.Base
+namespace _Item_System_.Runtime.Base
 {
     [CreateAssetMenu(fileName = "New_Firearm", menuName = "_Project_Plan_B/Create Item/Weapon/Firearm")]
     public abstract class FirearmData : WeaponData

@@ -1,43 +1,46 @@
 using System;
 using UnityEngine;
-namespace _Project_Plan_B_Survival_Inventory_System.Code.Runtime.Common
-{
-    public class InventoryWeight
-    {
-        private int _maxWeight;
-        private int _currentWeight;
 
-        public int MaxWeight
+namespace _Inventory_System_.Code.Runtime.Common
+{
+    public sealed class InventoryWeight
+    {
+        private float _maxWeight;
+        private float _currentWeight;
+
+        public float MaxWeight
         {
             get => _maxWeight;
             private set => _maxWeight = value;
         }
 
-        public int CurrentWeight
+        public float CurrentWeight
         {
             get => _currentWeight;
             private set
             {
-                _currentWeight = value;
-                OnChangeInventoryWeight?.Invoke(_currentWeight);
+                float roundedValue = (float)Math.Round(value, 1);
+                _currentWeight = roundedValue;
+                
+                OnChangeInventoryWeight?.Invoke(_currentWeight, _maxWeight);
 
                 if (_currentWeight > _maxWeight)
                     OnMaxCapacityReached?.Invoke();
             }
         }
 
-        public static event Action<int> OnChangeInventoryWeight;
+        public static event Action<float, float> OnChangeInventoryWeight;
         public static event Action OnMaxCapacityReached;
 
-        public void SetMaxWeight(int maxWeight) => _maxWeight = maxWeight;
+        public void SetMaxWeight(float maxWeight) => _maxWeight = maxWeight;
 
-        public void DecreaseWeight(int amount, ref int weight)
+        public void DecreaseWeight(int amount, ref float weight)
         {
             CurrentWeight -= amount;
             weight = _currentWeight;
         }
 
-        public void IncreaseWeight(int amount, ref int weight)
+        public void IncreaseWeight(float amount, ref float weight)
         {
             CurrentWeight += amount;
             weight = _currentWeight;

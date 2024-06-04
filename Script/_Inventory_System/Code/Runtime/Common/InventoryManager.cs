@@ -1,29 +1,37 @@
-using _Project_Plan_B_Survival_Input_System.Code;
+using _Input_System_.Code.Runtime;
+using _UI_Managment_.Runtime.Common;
 using UnityEngine;
 using Zenject;
 
-namespace _Project_Plan_B_Survival_Inventory_System.Code.Runtime.Common
+namespace _Inventory_System_.Code.Runtime.Common
 {
-    public class InventoryManager : MonoBehaviour
+    public sealed class InventoryManager : MonoBehaviour
     {
-        [Space, Header("Inventory Window Settings")]
-        [SerializeField] private bool _isEnable;
-        [SerializeField] private GameObject _inventoryWindow;
+        [Header("Inventory Settings")]
+        [SerializeField] private bool _inventoryEnable;
 
-        [Inject] IPlayerInputProvider _input;
-        public bool IsOpen => _isEnable;
+        private IPlayerInputHandler _input;
+        private IMenuManager _menuHandler;
+        private IVisualHandler _uiHandler;
+
+        public bool InventoryEnable => _inventoryEnable;
+
+        [Inject]
+        private void Constructor(IPlayerInputHandler inputHandler, IMenuManager menuHandler, IVisualHandler uiHandler)
+        {
+            _input = inputHandler;
+            _menuHandler = menuHandler;
+            _uiHandler = uiHandler;
+        }
 
         private void Update()
         {
             if (_input.Inventory)
             {
-                _isEnable = !_isEnable;
-                ToggleInventory(_isEnable);
+                _menuHandler.ToggleInventoryMenu();
+                _uiHandler.MoveToToolBeltSlot(_menuHandler.ActiveMenu != MenuType.Inventory);
+                _inventoryEnable = _menuHandler.ActiveMenu == MenuType.Inventory;
             }
-        }
-        public void ToggleInventory(bool isEnable)
-        {
-            _inventoryWindow.gameObject.SetActive(isEnable);
         }
     }
 

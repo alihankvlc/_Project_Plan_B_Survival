@@ -1,11 +1,12 @@
-﻿using _Project_Plan_B_Common;
+﻿using _Other_.Runtime.Code;
 using Sirenix.OdinInspector;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
+using Logger = _Other_.Runtime.Code.Logger;
 
-namespace _Project_Plan_B_Survival_Database.Code
+namespace _Database_System_.Code.Runtime
 {
     public interface IData
     {
@@ -25,7 +26,7 @@ namespace _Project_Plan_B_Survival_Database.Code
         public List<T2> Get_Data_List => Datas;
         public bool ContainsItem(int id) => Cache.ContainsKey(id);
 
-        public virtual void Init()
+        public virtual void Constructor()
         {
             Cache = Datas.ToDictionary(r => r.Id);
         }

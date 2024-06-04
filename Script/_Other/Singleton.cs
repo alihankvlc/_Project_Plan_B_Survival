@@ -1,45 +1,45 @@
 ﻿using Sirenix.OdinInspector;
 using UnityEngine;
 
-namespace _Project_Plan_B_Common
+namespace _Other_.Runtime.Code
 {
     public class Singleton<T> : SerializedMonoBehaviour where T : SerializedMonoBehaviour
-    {
-        private static T m_Instance;
-        public static new bool DontDestroyOnLoad = false;
+{
+    private static T m_Instance;
+    public static new bool DontDestroyOnLoad = false;
 
-        public static T Instance
+    public static T Instance
+    {
+        get
         {
-            get
+            if (m_Instance == null)
             {
+                m_Instance = FindObjectOfType<T>();
+
                 if (m_Instance == null)
                 {
-                    m_Instance = FindObjectOfType<T>();
-
-                    if (m_Instance == null)
-                    {
-                        GameObject singletonObject = new GameObject(typeof(T).Name);
-                        m_Instance = singletonObject.AddComponent<T>();
-                    }
+                    GameObject singletonObject = new GameObject(typeof(T).Name);
+                    m_Instance = singletonObject.AddComponent<T>();
                 }
-
-                return m_Instance;
             }
-        }
 
-        protected virtual void Awake()
-        {
-            if (m_Instance != null && m_Instance != this)
-            {
-                Destroy(gameObject);
-            }
-            else
-            {
-                if (!DontDestroyOnLoad) return;
-
-                m_Instance = this as T;
-                DontDestroyOnLoad(gameObject);
-            }
+            return m_Instance;
         }
     }
+
+    protected virtual void Awake()
+    {
+        if (m_Instance != null && m_Instance != this)
+        {
+            Destroy(gameObject);
+        }
+        else
+        {
+            if (!DontDestroyOnLoad) return;
+
+            m_Instance = this as T;
+            DontDestroyOnLoad(gameObject);
+        }
+    }
+}
 }

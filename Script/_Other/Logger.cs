@@ -1,7 +1,9 @@
 using System;
 using UnityEngine;
 
-public static class Logger
+namespace _Other_.Runtime.Code
+{
+    public  static class Logger
 {
     public static event Action<string> LogAction;
     public static class Log
@@ -31,3 +33,5 @@ public static class Logger
         }
     }
 }
+}
+

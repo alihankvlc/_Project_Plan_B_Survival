@@ -1,9 +1,9 @@
-﻿using _Project_Plan_B_Survival_Database.Code;
-using _Project_Plan_B_Survival_Item_System.Runtime.Base;
+﻿using _Database_System_.Code.Runtime;
+using _Item_System_.Runtime.Base;
 using UnityEditor;
 using UnityEngine;
 
-namespace _Project_Plan_B_Survival_Item_System.Runtime.Database
+namespace _Item_System_.Runtime.Database
 {
     public interface ItemDatabaseProvider
     {

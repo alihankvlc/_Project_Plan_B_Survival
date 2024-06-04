@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using Zenject;
 
-namespace _Project_Plan_B_Survival_Item_System.Runtime.Database
+namespace _Item_System_.Runtime.Database.Bind
 {
     public sealed class ItemDatabase_Binding : MonoInstaller
     {
@@ -9,7 +9,7 @@ namespace _Project_Plan_B_Survival_Item_System.Runtime.Database
 
         public override void InstallBindings()
         {
-            _itemDatabase.Init();
+            _itemDatabase.Constructor();
             Container.Bind<ItemDatabaseProvider>().To<ItemDatabase>().FromInstance(_itemDatabase).AsSingle();
         }
     }

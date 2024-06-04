@@ -1,15 +1,14 @@
-using _Project_Plan_B_Survival_Item_System.Runtime.Base;
-using _Project_Plan_B_Survival_Item_System.Runtime.Database;
-using _Project_Plan_B_Survival_Item_System.Runtime.Sub.Ammo;
-using _Project_Plan_B_Survival_Item_System.Runtime.Sub.Consumable;
 using System.IO;
+using _Item_System_.Runtime.Base;
+using _Item_System_.Runtime.Database;
+using _Item_System_.Runtime.Sub.Ammo;
 using UnityEditor;
 using UnityEngine;
 
 
-namespace _Project_Plan_B_Survival_Item_System.Editor
+namespace _Item_System_.Editor
 {
-    public class ItemCreator : EditorWindow
+    public sealed class ItemCreator : EditorWindow
     {
         private Vector2 _scrollPosition;
 
@@ -86,7 +85,7 @@ namespace _Project_Plan_B_Survival_Item_System.Editor
                 case ItemType.Consumable:
                     switch (_consumableType)
                     {
-                        case ConsumableType.Medkit:
+                        case ConsumableType.HealthItems:
                             _consumableType = (ConsumableType)EditorGUILayout.EnumPopup("Consumable Type", _consumableType);
                             _regenHealthAmount = EditorGUILayout.IntField("Regen Health Amount", _regenHealthAmount);
                             break;
@@ -164,13 +163,13 @@ namespace _Project_Plan_B_Survival_Item_System.Editor
             {
                 case ItemType.Consumable:
                     ConsumableData consumableData = SetItemGeneralSettings(SetConsumableData(_consumableType)) as ConsumableData;
-                    switch (consumableData.ConsumableType)
-                    {
-                        case ConsumableType.Medkit:
-                            Medkit medkit = consumableData as Medkit;
-                            medkit.Set_Item_MedKit_RegenHealthAmount(_regenHealthAmount);
-                            break;
-                    }
+                    // switch (consumableData.ConsumableType)
+                    // {
+                    //     case ConsumableType.HealthItems:
+                    //         Medkit medkit = consumableData as Medkit;
+                    //         medkit.Set_Item_MedKit_RegenHealthAmount(_regenHealthAmount);
+                    //         break;
+                    // }
 
                     FinalCreateItemData(consumableData, finalDataPath);
 
@@ -215,7 +214,7 @@ namespace _Project_Plan_B_Survival_Item_System.Editor
         {
             ConsumableData consumableData = type switch
             {
-                ConsumableType.Medkit => CreateInstance<Medkit>(),
+                //ConsumableType.HealthItems => CreateInstance<Medkit>(),
                 _ => null,
             };
 

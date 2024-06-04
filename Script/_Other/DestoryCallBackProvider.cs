@@ -1,6 +1,6 @@
 ﻿using Sirenix.OdinInspector;
 
-namespace _Project_Plan_B_Common
+namespace _Other_.Runtime.Code
 {
     public abstract class DeletableScriptableObject : SerializedScriptableObject
     {

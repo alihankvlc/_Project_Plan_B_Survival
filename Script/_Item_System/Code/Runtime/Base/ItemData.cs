@@ -1,12 +1,12 @@
-﻿using _Project_Plan_B_Common;
-using _Project_Plan_B_Survival_Database.Code;
-using _Project_Plan_B_Survival_Item_System.Runtime.Database;
+﻿using _Database_System_.Code.Runtime;
+using _Item_System_.Runtime.Database;
+using _Other_.Runtime.Code;
 using Sirenix.OdinInspector;
 using System;
 using UnityEditor;
 using UnityEngine;
 
-namespace _Project_Plan_B_Survival_Item_System.Runtime.Base
+namespace _Item_System_.Runtime.Base
 {
     [Flags]
     public enum ObtainableType
@@ -31,7 +31,9 @@ namespace _Project_Plan_B_Survival_Item_System.Runtime.Base
     }
     public enum ConsumableType
     {
-        Medkit,
+        HealthItems,
+        Food,
+        Drink,
     }
 
     public enum WeaponType
@@ -71,6 +73,14 @@ namespace _Project_Plan_B_Survival_Item_System.Runtime.Base
         Spear
     }
 
+    public enum HealthItemType
+    {
+        Bandage,
+        Antibiotics,
+        Painkillers,
+        Vitamins
+    }
+
     public abstract class ItemData : DeletableScriptableObject, IData
     {
 
@@ -105,7 +115,8 @@ namespace _Project_Plan_B_Survival_Item_System.Runtime.Base
 
         [Header("Data Settings")]
         [SerializeField] private int _dataId;
-        [SerializeField] private int _weight;
+        [SerializeField] private float _weight;
+        [SerializeField] private int _sellPrice;
         [SerializeField, ReadOnly] public virtual ItemType _itemType { get; protected set; }
         [SerializeField] private bool _isStackable;
         [SerializeField, ShowIf("@_isStackable")] private int _stackCapacity;
@@ -120,7 +131,8 @@ namespace _Project_Plan_B_Survival_Item_System.Runtime.Base
         public bool Stackable => _isStackable;
         public bool IsSrappable => _isScrappable;
         public int StackCapacity => _stackCapacity;
-        public int Weight => _weight;
+        public float Weight => _weight;
+        public int SellPrice => _sellPrice;
         public ObtainableType ObtainableType => _obtainableType;
 
         public void Set_Item_Id(int id)
@@ -157,7 +169,7 @@ namespace _Project_Plan_B_Survival_Item_System.Runtime.Base
         {
             _stackCapacity = amount;
         }
-        public void Set_Item_Weight(int weight)
+        public void Set_Item_Weight(float weight)
         {
             _weight = weight;
         }
@@ -170,6 +182,11 @@ namespace _Project_Plan_B_Survival_Item_System.Runtime.Base
         public void Set_Item_ObtainableType(ObtainableType type)
         {
             _obtainableType = type;
+        }
+
+        public void Set_Item_Sell_Price(int price)
+        {
+            _sellPrice = price;
         }
 
     }

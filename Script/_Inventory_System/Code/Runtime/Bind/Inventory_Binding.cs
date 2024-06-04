@@ -1,10 +1,10 @@
-﻿using _Project_Plan_B_Survival_Inventory_System.Code.Runtime.Common;
-using _Project_Plan_B_Survival_Inventory_System.Code.Runtime.Slot_Settings;
+﻿using _Inventory_System_.Code.Runtime.Common;
+using _Inventory_System_.Code.Runtime.SlotManagment;
 using Zenject;
 
-namespace _Project_Plan_B_Survival_Inventory_System.Code.Runtime.Bind
+namespace _Inventory_System_.Code.Runtime.Bind
 {
-    public class Inventory_Binding : MonoInstaller
+    public sealed class Inventory_Binding : MonoInstaller
     {
 
         public override void InstallBindings()

@@ -1,15 +1,16 @@
-using _Project_Plan_B_Survival_Item_System.Runtime.Base;
-using _Project_Plan_B_Survival_Item_System.Runtime.Database;
-using _Project_Plan_B_Survival_Inventory_System.Code.Runtime.Slot_Settings;
-using _Project_Plan_B_Common;
 using System;
 using System.Linq;
 using System.Collections.Generic;
 using Sirenix.OdinInspector;
 using Zenject;
 using UnityEngine;
+using _Item_System_.Runtime.Database;
+using _Item_System_.Runtime.Base;
+using _Inventory_System_.Code.Runtime.SlotManagment;
+using _Other_.Runtime.Code;
+using Logger = _Other_.Runtime.Code.Logger;
 
-namespace _Project_Plan_B_Survival_Inventory_System.Code.Runtime.Common
+namespace _Inventory_System_.Code.Runtime.Common
 {
     public interface IPlayerInventory
     {
@@ -20,28 +21,26 @@ namespace _Project_Plan_B_Survival_Inventory_System.Code.Runtime.Common
         public bool HasItemInInventory(int itemId, out SlotItem slotItem);
         public bool HasItemInSlotOfType(SlotType type, out List<SlotItem> slotItem);
         public bool GetItemInSlotByIndex(int index, out SlotItem slotItem);
-        public int Weight { get; }
+        public float InventoryWeight { get; }
         public bool IsFull { get; }
     }
 
-    public class Inventory : Singleton<Inventory>, IPlayerInventory
+    public sealed class Inventory : Singleton<Inventory>, IPlayerInventory
     {
         [Header("Inventory Settings")]
-        [SerializeField, ReadOnly] private int _currentWeight;
+        [SerializeField, ReadOnly] private float _currentWeight;
         [SerializeField, ReadOnly] private bool _isFull;
 
         [Space, Header("Item Data Settings")]
         [SerializeField, InlineEditor] private List<SlotItem> _slotsInItems = new List<SlotItem>();
-
         private ItemDatabaseProvider _itemDatabase;
         private InventoryWeight _weightHandler;
         private SlotHandler _slotHandler;
 
         public bool IsFull => _isFull;
-        public int Weight => _currentWeight;
+        public float InventoryWeight => _currentWeight;
 
         public static event Action<ItemData, int> OnItemAddedToInventory;
-
 
         [Inject]
         private void Constructor(ItemDatabaseProvider itemDatabase, SlotHandler slotHandler, InventoryWeight weightHandler)
@@ -178,7 +177,7 @@ namespace _Project_Plan_B_Survival_Inventory_System.Code.Runtime.Common
             if (stackableSpace == 0 || currentSlotItem.SlotInItemCount - currentSlotItem.Data.StackCapacity == 0)
             {
                 SwapSlotItems(currentSlot, nextSlot, currentSlotItem, nextSlotItem);
-                Logger.Log.Warning(this, $"The destination slot is full. Item cannot be stacked further.", Color.cyan, showToPlayer: true);
+                //Logger.Log.Warning(this, $"The destination slot is full. Item cannot be stacked further.", Color.cyan, showToPlayer: true);
                 return;
             }
 
@@ -227,7 +226,7 @@ namespace _Project_Plan_B_Survival_Inventory_System.Code.Runtime.Common
             _slotsInItems[nextIndex] = currentSlotItem;
         }
 
-        private void UpdateInventoryWeight(int weightChange)
+        private void UpdateInventoryWeight(float weightChange)
         {
             _weightHandler.IncreaseWeight(weightChange, ref _currentWeight);
         }

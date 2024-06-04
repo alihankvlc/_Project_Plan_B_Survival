@@ -4,10 +4,11 @@ using UnityEngine.UI;
 using TMPro;
 using DG.Tweening;
 using Sirenix.OdinInspector;
-namespace _Project_Plan_B_Survival_Inventory_System.Code.Runtime.UI
+
+namespace _Inventory_System_.Code.Runtime.UI
 {
     [RequireComponent(typeof(CanvasGroup))]
-    public class UIAddItemToInventoryInfo : MonoBehaviour
+    public sealed class UIAddItemToInventoryInfo : MonoBehaviour
     {
         [Header("UI Settings")]
         [SerializeField] private Image _icon;

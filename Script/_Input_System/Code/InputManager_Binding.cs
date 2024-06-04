@@ -1,13 +1,13 @@
 ﻿using UnityEngine;
 using Zenject;
 
-namespace _Project_Plan_B_Survival_Input_System.Code
+namespace _Input_System_.Code.Runtime.Bind
 {
     public sealed class InputManager_Binding : MonoInstaller
     {
         public override void InstallBindings()
         {
-            Container.Bind<IPlayerInputProvider>().To<InputManager>().FromComponentInHierarchy().AsSingle();
+            Container.Bind<IPlayerInputHandler>().To<InputManager>().FromComponentInHierarchy().AsSingle();
         }
     }
 }
