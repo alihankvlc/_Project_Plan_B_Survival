@@ -1,3 +1,4 @@
+using _Inventory_System_.Code.Runtime.SlotManagment;
 using _Item_System_.Runtime.Base;
 using UnityEngine;
 

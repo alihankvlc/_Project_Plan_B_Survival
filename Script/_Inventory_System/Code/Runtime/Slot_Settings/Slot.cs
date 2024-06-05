@@ -15,7 +15,7 @@ namespace _Inventory_System_.Code.Runtime.SlotManagment
         [SerializeField] private int _slotIndex;
         [SerializeField] private SlotItem _slotItem;
 
-        private IPlayerInventory _inventory;
+        private ISlotManagement _slotManagment;
 
 
         [SerializeField, ReadOnly]
@@ -25,7 +25,7 @@ namespace _Inventory_System_.Code.Runtime.SlotManagment
             protected set;
         }
 
-        private void Awake() => _inventory = Inventory.Instance;
+        private void Awake() => _slotManagment = Inventory.Instance;
         public SlotItem SlotInItem => _slotItem;
         public int Index => _slotIndex;
         public SlotStatus Status => _status;
@@ -36,10 +36,13 @@ namespace _Inventory_System_.Code.Runtime.SlotManagment
 
         public void OnDrop(PointerEventData eventData)
         {
+            if (eventData.pointerDrag == null)
+                return;
+
             GameObject droppedObject = eventData.pointerDrag;
             SlotItem draggingSlot = droppedObject.GetComponent<SlotItem>();
 
-            _inventory.SwapItem(draggingSlot.Slot.Index, _slotIndex);
+            _slotManagment.SwapItem(draggingSlot.Slot.Index, _slotIndex);
         }
     }
 }

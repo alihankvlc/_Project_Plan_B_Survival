@@ -9,7 +9,10 @@ namespace _Inventory_System_.Code.Runtime.Bind
 
         public override void InstallBindings()
         {
-            Container.Bind<IPlayerInventory>().FromComponentInHierarchy().AsSingle();
+            Container.BindInterfacesAndSelfTo<Inventory>().FromComponentInHierarchy().AsSingle();
+            Container.BindInterfacesAndSelfTo<InventoryManager>().FromComponentInHierarchy().AsSingle();
+            Container.BindInterfacesAndSelfTo<IToolBeltHandler>().FromComponentInHierarchy().AsSingle();
+
             Container.Bind<SlotHandler>().AsSingle();
             Container.Bind<InventoryWeight>().AsSingle();
         }

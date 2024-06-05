@@ -65,24 +65,28 @@ namespace _Inventory_System_.Code.Runtime.SlotManagment
             transform.SetParent(transform.root);
             transform.SetAsLastSibling();
 
+            _display.DisableUIElements();
             _display.ItemImage.raycastTarget = false;
 
         }
 
         public void OnDrag(PointerEventData eventData)
         {
-            transform.position = Input.mousePosition;
+            _display.ItemImage.transform.position = Input.mousePosition;
             _canvasGroup.alpha = 0.25f;
         }
 
         public void OnEndDrag(PointerEventData eventData)
         {
             _canvasGroup.alpha = 1;
-            _display.ItemImage.raycastTarget = true;
+            _display.EnableUIElements();
 
+            _display.ItemImage.raycastTarget = true;
             transform.SetParent(ParentAfterDrag);
+
             _reftTransform.localPosition = new Vector3(_reftTransform.localPosition.x, _reftTransform.localPosition.y, 0);
         }
+
         public void StackItem(StackType type, int stackChangeAmount = 1)
         {
             SlotInItemCount += type == StackType.Increase ? stackChangeAmount : -stackChangeAmount;

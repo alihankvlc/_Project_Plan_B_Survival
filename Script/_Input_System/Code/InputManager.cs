@@ -10,6 +10,7 @@ namespace _Input_System_.Code.Runtime
         public bool Inventory { get; }
         public bool Run { get; }
         public bool Crouch { get; }
+        public float MouseScroll { get; }
     }
     public sealed class InputManager : MonoBehaviour, IPlayerInputHandler
     {
@@ -22,6 +23,7 @@ namespace _Input_System_.Code.Runtime
         private InputAction _crouchInputAction;
         private InputAction _aimInputAction;
         private InputAction _inventoryInputAction;
+        private InputAction _mouseScrollInputAction;
 
 
         private const string INPUT_MOVE_ENTRY = "Move";
@@ -29,6 +31,7 @@ namespace _Input_System_.Code.Runtime
         private const string INPUT_CROUCH_ENTRY = "Crouch";
         private const string INPUT_AIM_ENTRY = "Aim";
         private const string INPUT_INVENTORY_ENTRY = "Inventory";
+        private const string INPUT_MOUSE_SCROLL_ENTRY = "MouseScroll";
 
         public Vector2 Move { get; private set; }
 
@@ -36,6 +39,7 @@ namespace _Input_System_.Code.Runtime
         public bool Inventory { get; private set; }
         public bool Run { get; private set; }
         public bool Crouch { get; private set; }
+        public float MouseScroll { get; private set; }
 
 
         private void Awake()
@@ -47,6 +51,7 @@ namespace _Input_System_.Code.Runtime
             _crouchInputAction = _action_Map.FindAction(INPUT_CROUCH_ENTRY);
             _aimInputAction = _action_Map.FindAction(INPUT_AIM_ENTRY);
             _inventoryInputAction = _action_Map.FindAction(INPUT_INVENTORY_ENTRY);
+            _mouseScrollInputAction = _action_Map.FindAction(INPUT_MOUSE_SCROLL_ENTRY);
 
         }
         private void OnEnable()
@@ -55,6 +60,9 @@ namespace _Input_System_.Code.Runtime
 
             _moveInputAction.performed += (InputAction.CallbackContext context) => Move = context.ReadValue<Vector2>();
             _moveInputAction.canceled += (InputAction.CallbackContext context) => Move = context.ReadValue<Vector2>();
+
+            _mouseScrollInputAction.performed += (InputAction.CallbackContext context) => MouseScroll = context.ReadValue<float>();
+            _mouseScrollInputAction.canceled += (InputAction.CallbackContext context) => MouseScroll = context.ReadValue<float>();
 
             _runInputAction.performed += (InputAction.CallbackContext context) => Run = context.ReadValueAsButton();
             _runInputAction.canceled += (InputAction.CallbackContext context) => Run = context.ReadValueAsButton();
@@ -81,6 +89,9 @@ namespace _Input_System_.Code.Runtime
 
             _runInputAction.performed -= (InputAction.CallbackContext context) => Run = context.ReadValueAsButton();
             _runInputAction.canceled -= (InputAction.CallbackContext context) => Run = context.ReadValueAsButton();
+
+            _mouseScrollInputAction.performed -= (InputAction.CallbackContext context) => MouseScroll = context.ReadValue<float>();
+            _mouseScrollInputAction.canceled -= (InputAction.CallbackContext context) => MouseScroll = context.ReadValue<float>();
 
             _crouchInputAction.performed -= (InputAction.CallbackContext context) => Crouch = context.ReadValueAsButton();
             _crouchInputAction.canceled -= (InputAction.CallbackContext context) => Crouch = context.ReadValueAsButton();

@@ -1,4 +1,5 @@
-﻿using Sirenix.OdinInspector;
+﻿using _Inventory_System_.Code.Runtime.SlotManagment;
+using Sirenix.OdinInspector;
 using UnityEngine;
 
 namespace _Item_System_.Runtime.Base
@@ -11,7 +12,6 @@ namespace _Item_System_.Runtime.Base
 
         public virtual void Consume()
         {
-
         }
     }
 }

@@ -1,4 +1,5 @@
 using _Inventory_System_.Code.Runtime.Common;
+using _Inventory_System_.Code.Runtime.SlotManagment;
 using _Inventory_System_.Code.Runtime.UI;
 using _Item_System_.Runtime.Base;
 using _Other_.Runtime.Code;
@@ -88,6 +89,9 @@ namespace _UI_Managment_.Runtime.Common
             Inventory.OnItemAddedToInventory += ItemAddedToInventory;
             InventoryWeight.OnChangeInventoryWeight += SetInventoryWeight;
 
+            ToolBelt.OnItemEquipped += ShowEquippedItem;
+            ToolBelt.OnItemUnequipped += HideEquippedItem;
+
             Logger.LogAction += ShowToPlayerMessage;
         }
 
@@ -175,12 +179,13 @@ namespace _UI_Managment_.Runtime.Common
             obj.SetActive(isEnable);
         }
 
-        private void OnDestroy()
+        private void ShowEquippedItem(SlotItem slotItem)
         {
-            Inventory.OnItemAddedToInventory -= ItemAddedToInventory;
-            InventoryWeight.OnChangeInventoryWeight -= SetInventoryWeight;
+        }
 
-            Logger.LogAction -= ShowToPlayerMessage;
+        private void HideEquippedItem(SlotItem slotItem)
+        {
+            
         }
 
         public void MoveToToolBeltSlot(bool isMoveToDefault)
@@ -223,6 +228,17 @@ namespace _UI_Managment_.Runtime.Common
         {
             bool checkThreshold = value < slider.maxValue * threshold / 100f;
             slider.fillRect.GetComponent<Image>().color = checkThreshold ? color : Color.white;
+        }
+
+        private void OnDestroy()
+        {
+            Inventory.OnItemAddedToInventory -= ItemAddedToInventory;
+            InventoryWeight.OnChangeInventoryWeight -= SetInventoryWeight;
+
+            ToolBelt.OnItemEquipped -= ShowEquippedItem;
+            ToolBelt.OnItemUnequipped -= HideEquippedItem;
+
+            Logger.LogAction -= ShowToPlayerMessage;
         }
     }
 }

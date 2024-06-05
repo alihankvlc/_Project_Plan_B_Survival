@@ -7,5 +7,7 @@ namespace _Item_System_.Runtime.Sub.Weapon.Melee
     public sealed class Ax : MeleeData
     {
         public override MeleeType MeleeType => MeleeType.Ax;
+        protected override int EQUIP_HASH_ID => Animator.StringToHash("Equip_Ax");
+        protected override int ATTACK_HASH_ID => Animator.StringToHash("Attack_Ax");
     }
 }

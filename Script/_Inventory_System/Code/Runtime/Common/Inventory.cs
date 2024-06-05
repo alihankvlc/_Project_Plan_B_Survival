@@ -12,20 +12,29 @@ using Logger = _Other_.Runtime.Code.Logger;
 
 namespace _Inventory_System_.Code.Runtime.Common
 {
-    public interface IPlayerInventory
+    public interface IItemManagement // TODO: IItemManagement Inventory içerisinde işleniyor bunu ayrı bir sınıfa taşıyabilirim.
     {
         public void AddItemToInventory(int itemId, int count = 1);
         public void RemoveItemFromInventory(int index, bool allDestroy = false, int count = 1);
+        public bool HasItemInInventory(int itemId, out SlotItem slotItem);
+    }
+
+    public interface ISlotManagement // TODO: ISlotManagment Inventory içerisinde işleniyor bunu ayrı bir sınıfa taşıyabilirim.
+    {
         public void SwapItem(int currentSlotIndex, int nextSlotIndex);
         public void MoveSlotItem(Slot currentSlot, Slot nextSlot, SlotItem currentSlotItem);
-        public bool HasItemInInventory(int itemId, out SlotItem slotItem);
         public bool HasItemInSlotOfType(SlotType type, out List<SlotItem> slotItem);
+        public bool HasItemInSlotOfType(SlotType type, int index, out SlotItem slotItem);
         public bool GetItemInSlotByIndex(int index, out SlotItem slotItem);
+    }
+
+    public interface IInventoryState
+    {
         public float InventoryWeight { get; }
         public bool IsFull { get; }
     }
 
-    public sealed class Inventory : Singleton<Inventory>, IPlayerInventory
+    public sealed class Inventory : Singleton<Inventory>, IItemManagement, ISlotManagement, IInventoryState
     {
         [Header("Inventory Settings")]
         [SerializeField, ReadOnly] private float _currentWeight;
@@ -36,6 +45,7 @@ namespace _Inventory_System_.Code.Runtime.Common
         private ItemDatabaseProvider _itemDatabase;
         private InventoryWeight _weightHandler;
         private SlotHandler _slotHandler;
+        private IToolBeltHandler _toolBeltHandler;
 
         public bool IsFull => _isFull;
         public float InventoryWeight => _currentWeight;
@@ -43,11 +53,13 @@ namespace _Inventory_System_.Code.Runtime.Common
         public static event Action<ItemData, int> OnItemAddedToInventory;
 
         [Inject]
-        private void Constructor(ItemDatabaseProvider itemDatabase, SlotHandler slotHandler, InventoryWeight weightHandler)
+        private void Constructor(ItemDatabaseProvider itemDatabase, SlotHandler slotHandler,
+        InventoryWeight weightHandler, IToolBeltHandler toolBeltHandler)
         {
             _itemDatabase = itemDatabase;
             _slotHandler = slotHandler;
             _weightHandler = weightHandler;
+            _toolBeltHandler = toolBeltHandler;
         }
 
         private void Update()
@@ -61,6 +73,7 @@ namespace _Inventory_System_.Code.Runtime.Common
         public void AddItemToInventory(int itemId, int count = 1)
         {
             ItemData itemData = _itemDatabase.GetItemData(itemId);
+
             if (itemData == null)
             {
                 Logger.Log.Warning(this, $"Item with id {itemId} not found in database", Color.cyan);
@@ -95,6 +108,7 @@ namespace _Inventory_System_.Code.Runtime.Common
         public void RemoveItemFromInventory(int index, bool allDestroy = false, int count = 1)
         {
             SlotItem slotItem;
+
             if (GetItemInSlotByIndex(index, out slotItem))
             {
                 int decreaseCount = slotItem.SlotInItemCount;
@@ -105,6 +119,10 @@ namespace _Inventory_System_.Code.Runtime.Common
                 {
                     slotItem.Slot.SetSlotStatus(SlotStatus.Empty);
                     _slotsInItems.Remove(slotItem);
+
+                    if ((slotItem.Slot is ToolBeltSlot toolBeltSlot) && toolBeltSlot.IsSelectedSlot)
+                        _toolBeltHandler.UnEquip();
+
                     Destroy(slotItem.gameObject);
                 }
             }
@@ -112,8 +130,8 @@ namespace _Inventory_System_.Code.Runtime.Common
 
         public void SwapItem(int currentSlotIndex, int nextSlotIndex)
         {
-            Slot currentSlot = _slotHandler.Slots.FirstOrDefault(s => s.Index == currentSlotIndex);
-            Slot nextSlot = _slotHandler.Slots.FirstOrDefault(s => s.Index == nextSlotIndex);
+            Slot currentSlot = _slotHandler.Slots.FirstOrDefault(r => r.Index == currentSlotIndex);
+            Slot nextSlot = _slotHandler.Slots.FirstOrDefault(r => r.Index == nextSlotIndex);
 
             if (currentSlot == null || nextSlot == null)
                 return;
@@ -147,18 +165,30 @@ namespace _Inventory_System_.Code.Runtime.Common
 
             nextSlot.SetSlotItem(currentSlotItem);
             currentSlot.SetSlotItem(null);
+
+            if (currentSlot is ToolBeltSlot currentToolBeltSlot && currentToolBeltSlot.IsSelectedSlot
+            || (nextSlot is ToolBeltSlot nextToolBeltSlot && nextToolBeltSlot.IsSelectedSlot))
+            {
+                _toolBeltHandler.UnEquip();
+            }
         }
 
         public bool HasItemInInventory(int itemId, out SlotItem slotItem)
         {
-            slotItem = _slotsInItems.FirstOrDefault(si => si.Data.Id == itemId);
+            slotItem = _slotsInItems.FirstOrDefault(r => r.Data.Id == itemId);
             return slotItem != null;
         }
 
         public bool HasItemInSlotOfType(SlotType type, out List<SlotItem> slotItems)
         {
-            slotItems = _slotsInItems.Where(si => si.Slot.Type == type).ToList();
+            slotItems = _slotsInItems.Where(r => r.Slot.Type == type).ToList();
             return slotItems.Count > 0;
+        }
+
+        public bool HasItemInSlotOfType(SlotType type, int index, out SlotItem slotItem)
+        {
+            slotItem = _slotsInItems.FirstOrDefault(r => r.Slot.Type == type && r.Slot.Index == index);
+            return slotItem != null;
         }
 
         public bool GetItemInSlotByIndex(int index, out SlotItem slotItem)
@@ -224,6 +254,12 @@ namespace _Inventory_System_.Code.Runtime.Common
 
             _slotsInItems[currentIndex] = nextSlotItem;
             _slotsInItems[nextIndex] = currentSlotItem;
+
+            if ((currentSlot is ToolBeltSlot currentToolBeltSlot && currentToolBeltSlot.IsSelectedSlot)
+            || (nextSlot is ToolBeltSlot nextToolbeltSlot && nextToolbeltSlot.IsSelectedSlot))
+            {
+                _toolBeltHandler.UnEquip();
+            }
         }
 
         private void UpdateInventoryWeight(float weightChange)

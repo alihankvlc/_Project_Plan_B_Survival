@@ -80,6 +80,13 @@ namespace _Item_System_.Runtime.Base
         Painkillers,
         Vitamins
     }
+    
+    public interface IEquippable
+    {
+        public void EquipWeapon(Animator animator, ref bool isEquipped);
+        public void UnequipWeapon(Animator animator, ref bool isEquipped);
+        public void Attack(ref Animator animator, ref bool isEquipped);
+    }
 
     public abstract class ItemData : DeletableScriptableObject, IData
     {
