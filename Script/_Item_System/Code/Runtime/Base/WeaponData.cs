@@ -39,9 +39,6 @@ namespace _Item_System_.Runtime.Base
         {
             if (isEquipped) animator.Play(ATTACK_HASH_ID);
         }
-
-        public void Use()
-        {
-        }
+        public void Set_Item_Max_Durability(int durability) => _durability = durability;
     }
 }

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
-using Logger = _Other_.Runtime.Code.Logger;
+using LoggingUtility = _Other_.Runtime.Code.LoggingUtility;
 
 namespace _Database_System_.Code.Runtime
 {
@@ -12,7 +12,7 @@ namespace _Database_System_.Code.Runtime
     {
         public int Id { get; }
         public string DisplayName { get; }
-        public string Description { get; }
+        public string DisplayDescription { get; }
         public Sprite Icon { get; }
     }
 
@@ -83,7 +83,7 @@ namespace _Database_System_.Code.Runtime
             if (Cache.TryGetValue(id, out T2 existingData))
                 return existingData;
 
-            Logger.Log.Error(this, $"Data not found: {id}", Color.cyan);
+            LoggingUtility.Log.Error(this, $"Data not found: {id}", Color.cyan);
             return default(T2);
         }
     }

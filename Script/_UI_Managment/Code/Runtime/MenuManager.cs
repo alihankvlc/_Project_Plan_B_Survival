@@ -12,12 +12,13 @@ namespace _UI_Managment_.Runtime.Common
     {
         public void SetMenuState(MenuType menuType);
         public void ToggleInventoryMenu();
-        
+
         public MenuType ActiveMenu { get; }
     }
 
     public sealed class MenuManager : Singleton<MenuManager>, IMenuManager
     {
+        [Header("Menu Settings")]
         [SerializeField] private List<MenuButtonEventArgs> _menuButtonEventArgs = new();
         [SerializeField] private Menu[] _menus;
         [SerializeField] private MenuType _activeMenu = MenuType.None;
@@ -40,7 +41,7 @@ namespace _UI_Managment_.Runtime.Common
 
         private void Update()
         {
-            if (Input.GetKeyUp(KeyCode.Escape) && _activeMenu != MenuType.None)
+            if (Input.GetKeyUp(KeyCode.Escape) && _activeMenu != MenuType.None) //FIXME: envanter ESC ile kapatıldığında toolbelt kayboluyor.
             {
                 DisableActiveMenu(_activeMenu);
                 SetMenuState(MenuType.None);
@@ -67,6 +68,11 @@ namespace _UI_Managment_.Runtime.Common
         {
             ActiveMenu = _activeMenu == MenuType.None ? MenuType.Inventory : MenuType.None;
             SetMenuState(ActiveMenu);
+        }
+
+        public void ToogleCraftingMenu()
+        {
+
         }
 
         public void SetMenuState(MenuType menuType)

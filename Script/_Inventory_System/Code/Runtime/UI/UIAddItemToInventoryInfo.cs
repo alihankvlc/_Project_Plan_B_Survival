@@ -38,8 +38,7 @@ namespace _Inventory_System_.Code.Runtime.UI
         }
 
         private void Awake() => _canvasGroup = GetComponent<CanvasGroup>();
-
-        private void Start() => transform.DOScale(Vector3.one, 0.5f);
+        private void Start() => transform.DOScale(Vector3.one, 0.5f).SetEase(Ease.OutBack);
 
         private void Update()
         {

@@ -13,7 +13,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using Zenject;
-using Logger = _Other_.Runtime.Code.Logger;
+using LoggingUtility = _Other_.Runtime.Code.LoggingUtility;
 
 namespace _UI_Managment_.Runtime.Common
 {
@@ -92,7 +92,7 @@ namespace _UI_Managment_.Runtime.Common
             ToolBelt.OnItemEquipped += ShowEquippedItem;
             ToolBelt.OnItemUnequipped += HideEquippedItem;
 
-            Logger.LogAction += ShowToPlayerMessage;
+            LoggingUtility.LogAction += ShowToPlayerMessage;
         }
 
         private void Update()
@@ -132,10 +132,10 @@ namespace _UI_Managment_.Runtime.Common
 
             if (isEnable)
             {
-                _uiInventoryItemDescription.transform.DOScale(Vector3.one, 0.2f);
+                _uiInventoryItemDescription.transform.DOScale(Vector3.one, 0.2f).SetEase(Ease.OutCubic);
 
                 _itemNameTextMesh.SetText(data.DisplayName);
-                _itemDescriptionTextMesh.SetText(data.Description);
+                _itemDescriptionTextMesh.SetText(data.DisplayDescription);
                 _itemWeightTextMesh.SetText($"{data.Weight}");
                 _itemSellPriceTextMesh.SetText($"${data.SellPrice}");
             }
@@ -185,7 +185,7 @@ namespace _UI_Managment_.Runtime.Common
 
         private void HideEquippedItem(SlotItem slotItem)
         {
-            
+
         }
 
         public void MoveToToolBeltSlot(bool isMoveToDefault)
@@ -238,7 +238,7 @@ namespace _UI_Managment_.Runtime.Common
             ToolBelt.OnItemEquipped -= ShowEquippedItem;
             ToolBelt.OnItemUnequipped -= HideEquippedItem;
 
-            Logger.LogAction -= ShowToPlayerMessage;
+            LoggingUtility.LogAction -= ShowToPlayerMessage;
         }
     }
 }

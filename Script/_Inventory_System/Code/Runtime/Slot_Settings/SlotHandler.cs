@@ -23,7 +23,11 @@ namespace _Inventory_System_.Code.Runtime.SlotManagment
 
         public Slot FindAvailableSlot(ItemData data)
         {
-            Slot availableSlot = _slots.FirstOrDefault(r => r.Type == SlotType.Inventory && r.Status == SlotStatus.Empty);
+            Slot availableSlot = _slots.FirstOrDefault(r => r.Type == SlotType.ToolBelt && r.Status == SlotStatus.Empty);
+
+            if (availableSlot == null)
+                availableSlot = _slots.FirstOrDefault(r => r.Type == SlotType.Inventory && r.Status == SlotStatus.Empty);
+
             availableSlot?.SetSlotStatus(SlotStatus.Occupied);
             return availableSlot;
         }

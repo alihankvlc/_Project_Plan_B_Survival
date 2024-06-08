@@ -8,14 +8,16 @@ using _Item_System_.Runtime.Database;
 using _Item_System_.Runtime.Base;
 using _Inventory_System_.Code.Runtime.SlotManagment;
 using _Other_.Runtime.Code;
-using Logger = _Other_.Runtime.Code.Logger;
+using LoggingUtility = _Other_.Runtime.Code.LoggingUtility;
+using Sirenix.Utilities;
 
 namespace _Inventory_System_.Code.Runtime.Common
 {
     public interface IItemManagement // TODO: IItemManagement Inventory içerisinde işleniyor bunu ayrı bir sınıfa taşıyabilirim.
     {
         public void AddItemToInventory(int itemId, int count = 1);
-        public void RemoveItemFromInventory(int index, bool allDestroy = false, int count = 1);
+        public void RemoveItemFromInventory(int index, int count = 1);
+        public void RemoveItemFromInventory(ItemData data, int count = 1);
         public bool HasItemInInventory(int itemId, out SlotItem slotItem);
     }
 
@@ -26,19 +28,19 @@ namespace _Inventory_System_.Code.Runtime.Common
         public bool HasItemInSlotOfType(SlotType type, out List<SlotItem> slotItem);
         public bool HasItemInSlotOfType(SlotType type, int index, out SlotItem slotItem);
         public bool GetItemInSlotByIndex(int index, out SlotItem slotItem);
+        public int GetItemQuantity(int itemId);
     }
 
     public interface IInventoryState
     {
         public float InventoryWeight { get; }
-        public bool IsFull { get; }
+        public bool HasInventorySpace(int itemId, int count = 1);
     }
 
     public sealed class Inventory : Singleton<Inventory>, IItemManagement, ISlotManagement, IInventoryState
     {
         [Header("Inventory Settings")]
         [SerializeField, ReadOnly] private float _currentWeight;
-        [SerializeField, ReadOnly] private bool _isFull;
 
         [Space, Header("Item Data Settings")]
         [SerializeField, InlineEditor] private List<SlotItem> _slotsInItems = new List<SlotItem>();
@@ -47,7 +49,6 @@ namespace _Inventory_System_.Code.Runtime.Common
         private SlotHandler _slotHandler;
         private IToolBeltHandler _toolBeltHandler;
 
-        public bool IsFull => _isFull;
         public float InventoryWeight => _currentWeight;
 
         public static event Action<ItemData, int> OnItemAddedToInventory;
@@ -64,10 +65,14 @@ namespace _Inventory_System_.Code.Runtime.Common
 
         private void Update()
         {
-            _isFull = _slotsInItems.Count >= _slotHandler.Slots.Count;
-
-            if (Input.GetKeyDown(KeyCode.R)) AddItemToInventory(1, 1);
-            if (Input.GetKeyDown(KeyCode.T)) AddItemToInventory(2, 2);
+            if (Input.GetKeyDown(KeyCode.R))
+            {
+                AddItemToInventory(1, 1);
+            }
+            if (Input.GetKeyDown(KeyCode.T))
+            {
+                AddItemToInventory(2, 2);
+            }
         }
 
         public void AddItemToInventory(int itemId, int count = 1)
@@ -76,9 +81,11 @@ namespace _Inventory_System_.Code.Runtime.Common
 
             if (itemData == null)
             {
-                Logger.Log.Warning(this, $"Item with id {itemId} not found in database", Color.cyan);
+                LoggingUtility.Log.Warning(this, $"Item with id {itemId} not found in database", Color.cyan);
                 return;
             }
+
+            if (!HasInventorySpace(itemId, count)) return;
 
             while (count > 0)
             {
@@ -97,7 +104,7 @@ namespace _Inventory_System_.Code.Runtime.Common
                     }
                 }
 
-                if (_isFull) break;
+                if (!HasInventorySpace(itemId, count)) break;
 
                 int amountToAdd = Mathf.Min(count, itemData.StackCapacity);
                 AddItemToNewSlot(itemData, amountToAdd);
@@ -105,15 +112,15 @@ namespace _Inventory_System_.Code.Runtime.Common
             }
         }
 
-        public void RemoveItemFromInventory(int index, bool allDestroy = false, int count = 1)
+        public void RemoveItemFromInventory(int index, int count = 1)
         {
             SlotItem slotItem;
 
             if (GetItemInSlotByIndex(index, out slotItem))
             {
-                int decreaseCount = slotItem.SlotInItemCount;
-                slotItem.StackItem(StackType.Decrease, allDestroy ? decreaseCount : count);
-                UpdateInventoryWeight(-slotItem.Data.Weight * (allDestroy ? decreaseCount : count));
+                int decreaseCount = Mathf.Min(slotItem.SlotInItemCount, count);
+                slotItem.StackItem(StackType.Decrease, decreaseCount);
+                UpdateInventoryWeight(-slotItem.Data.Weight * decreaseCount);
 
                 if (slotItem.SlotInItemCount == 0)
                 {
@@ -124,6 +131,38 @@ namespace _Inventory_System_.Code.Runtime.Common
                         _toolBeltHandler.UnEquip();
 
                     Destroy(slotItem.gameObject);
+                }
+            }
+        }
+
+        public void RemoveItemFromInventory(ItemData data, int count = 1)
+        {
+            int remainingCount = count;
+
+            for (int i = _slotsInItems.Count - 1; i >= 0; i--)
+            {
+                SlotItem slotItem = _slotsInItems[i];
+                if (slotItem.Data == data)
+                {
+                    int removeCount = Mathf.Min(slotItem.SlotInItemCount, remainingCount);
+                    slotItem.StackItem(StackType.Decrease, removeCount);
+                    UpdateInventoryWeight(-slotItem.Data.Weight * removeCount);
+
+                    remainingCount -= removeCount;
+
+                    if (slotItem.SlotInItemCount == 0)
+                    {
+                        slotItem.Slot.SetSlotStatus(SlotStatus.Empty);
+                        _slotsInItems.RemoveAt(i);
+
+                        if ((slotItem.Slot is ToolBeltSlot toolBeltSlot) && toolBeltSlot.IsSelectedSlot)
+                            _toolBeltHandler.UnEquip();
+
+                        Destroy(slotItem.gameObject);
+                    }
+
+                    if (remainingCount <= 0)
+                        break;
                 }
             }
         }
@@ -148,7 +187,8 @@ namespace _Inventory_System_.Code.Runtime.Common
                 return;
             }
 
-            if (currentSlotItem.Data.Id != nextSlotItem.Data.Id)
+            if (currentSlotItem.Data.Id != nextSlotItem.Data.Id ||
+                !currentSlotItem.Data.Stackable || !nextSlotItem.Data.Stackable)
             {
                 SwapSlotItems(currentSlot, nextSlot, currentSlotItem, nextSlotItem);
                 return;
@@ -173,6 +213,14 @@ namespace _Inventory_System_.Code.Runtime.Common
             }
         }
 
+        public bool HasInventorySpace(int itemId, int count = 1)
+        {
+            ItemData data = _itemDatabase.GetItemData(itemId);
+
+            if (data.Stackable) return HasSpaceForStackableItem(data, count);
+            else return HasSpaceForNonStackableItem();
+        }
+
         public bool HasItemInInventory(int itemId, out SlotItem slotItem)
         {
             slotItem = _slotsInItems.FirstOrDefault(r => r.Data.Id == itemId);
@@ -193,8 +241,14 @@ namespace _Inventory_System_.Code.Runtime.Common
 
         public bool GetItemInSlotByIndex(int index, out SlotItem slotItem)
         {
-            slotItem = _slotsInItems.FirstOrDefault(si => si.Slot.Index == index);
+            slotItem = _slotsInItems.FirstOrDefault(r => r.Slot.Index == index);
             return slotItem != null;
+        }
+
+        public int GetItemQuantity(int itemId)
+        {
+            return _slotsInItems.Where(slotItem =>
+            slotItem.Data.Id == itemId).Sum(slotItem => slotItem.SlotInItemCount);
         }
 
         private void ProcessSameTypeItems(Slot currentSlot, Slot nextSlot, SlotItem currentSlotItem, SlotItem nextSlotItem)
@@ -207,7 +261,6 @@ namespace _Inventory_System_.Code.Runtime.Common
             if (stackableSpace == 0 || currentSlotItem.SlotInItemCount - currentSlotItem.Data.StackCapacity == 0)
             {
                 SwapSlotItems(currentSlot, nextSlot, currentSlotItem, nextSlotItem);
-                //Logger.Log.Warning(this, $"The destination slot is full. Item cannot be stacked further.", Color.cyan, showToPlayer: true);
                 return;
             }
 
@@ -262,10 +315,25 @@ namespace _Inventory_System_.Code.Runtime.Common
             }
         }
 
+        private bool HasSpaceForStackableItem(ItemData data, int count)
+        {
+            foreach (var slotItem in _slotsInItems.Where(r => r.Data.Id == data.Id))
+                if (slotItem.SlotInItemCount < data.StackCapacity)
+                    return true;
+
+            return _slotsInItems.Count < _slotHandler.Slots.Count;
+        }
+
+        private bool HasSpaceForNonStackableItem()
+        {
+            return _slotsInItems.Count < _slotHandler.Slots.Count;
+        }
+
         private void UpdateInventoryWeight(float weightChange)
         {
             _weightHandler.IncreaseWeight(weightChange, ref _currentWeight);
         }
+
     }
 }
 

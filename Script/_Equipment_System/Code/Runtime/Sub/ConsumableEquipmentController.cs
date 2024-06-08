@@ -1,3 +1,4 @@
+using _Equipment_System_.Runtime.Base;
 using _Inventory_System_.Code.Runtime.Common;
 using _Inventory_System_.Code.Runtime.SlotManagment;
 using _Item_System_.Runtime.Base;
@@ -5,13 +6,10 @@ using Sirenix.OdinInspector;
 using UnityEngine;
 using Zenject;
 
-namespace _Player_System_.Runtime.Common
+namespace _Equipment_System_.Runtime.Sub
 {
     public class ConsumableEquipmentController : EquipmentControll
     {
-        [SerializeField, ReadOnly] private ConsumableData _consumableData;
-
-        private SlotItem _slotItem;
         private IItemManagement _itemManagement;
 
         [Inject]
@@ -22,10 +20,14 @@ namespace _Player_System_.Runtime.Common
 
         private void Update()
         {
-            if (Input.GetMouseButtonDown(0) && IsEquipped && _slotItem != null)
+            if (Input.GetKeyDown(KeyCode.E) && IsEquipped && EquippedSlotItem != null)
             {
-                _consumableData.Consume();
-                _itemManagement.RemoveItemFromInventory(_slotItem.Slot.Index);
+                if (EquippedSlotItem.IsHoveringSlot) return;
+
+                ConsumableData consumableData = EquippedSlotItem.Data as ConsumableData;
+                consumableData.Consume();
+
+                _itemManagement.RemoveItemFromInventory(EquippedSlotItem.Slot.Index);
             }
         }
 
@@ -34,20 +36,16 @@ namespace _Player_System_.Runtime.Common
             if (slotItem.Data is ConsumableData consumableData && !IsEquipped)
             {
                 IsEquipped = true;
-
-                _slotItem = slotItem;
-                _consumableData = consumableData;
+                EquippedSlotItem = slotItem;
             }
         }
 
         public override void ItemUnEquipmentHandler(SlotItem slotItem)
         {
-            if (slotItem.Data is ConsumableData consumableData && IsEquipped && _consumableData != null)
+            if (slotItem.Data is ConsumableData consumableData && IsEquipped && EquippedSlotItem != null)
             {
                 IsEquipped = false;
-
-                _consumableData = null;
-                _slotItem = null;
+                EquippedSlotItem = null;
             }
         }
     }

@@ -1,8 +1,11 @@
 ﻿using _Database_System_.Code.Runtime;
 using _Item_System_.Runtime.Database;
+using _Crafting_System_.Runtime.Common;
 using _Other_.Runtime.Code;
 using Sirenix.OdinInspector;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
@@ -16,12 +19,10 @@ namespace _Item_System_.Runtime.Base
         Looting = 1 << 1,
         Trading = 1 << 2,
     }
-
     public enum ScrappableType
     {
         None,
     }
-
     public enum ItemType
     {
         Consumable,
@@ -35,13 +36,11 @@ namespace _Item_System_.Runtime.Base
         Food,
         Drink,
     }
-
     public enum WeaponType
     {
         Melee,
         Firearm,
     }
-
     public enum ResourcesType
     {
         Coal,
@@ -49,7 +48,6 @@ namespace _Item_System_.Runtime.Base
         Stone,
         Iron
     }
-
     public enum FirearmType
     {
         Rifle,
@@ -72,7 +70,6 @@ namespace _Item_System_.Runtime.Base
         Knife,
         Spear
     }
-
     public enum HealthItemType
     {
         Bandage,
@@ -80,39 +77,34 @@ namespace _Item_System_.Runtime.Base
         Painkillers,
         Vitamins
     }
-    
     public interface IEquippable
     {
         public void EquipWeapon(Animator animator, ref bool isEquipped);
         public void UnequipWeapon(Animator animator, ref bool isEquipped);
         public void Attack(ref Animator animator, ref bool isEquipped);
     }
-
     public abstract class ItemData : DeletableScriptableObject, IData
     {
 
 #if UNITY_EDITOR
         [SerializeField, Multiline, Space] private string _Editor_Description;
 
-        [Button("Destory")]
-        private void DestroyButton()
-        {
-            AssetDatabase.DeleteAsset(AssetDatabase.GetAssetPath(this));
-        }
-        protected override void OnDestroy()
-        {
-            RemoveItemDataFromDatabase();
-        }
-
         private void OnValidate()
         {
-            if (!_isStackable) _stackCapacity = 1;
+            if (!_isStackable) IsNotStackableItem();
+
+            if (!CanCrafting())
+            {
+                _craftingRequirement = null;
+                _craftingDuration = 0f;
+            }
         }
 
-        private void RemoveItemDataFromDatabase()
-        {
-            ItemDatabase.Instance.RemoveItem(_dataId);
-        }
+        [Button("Destory")]
+        private void DestroyButton() => AssetDatabase.DeleteAsset(AssetDatabase.GetAssetPath(this));
+        protected override void OnDestroy() => RemoveItemDataFromDatabase();
+        private void IsNotStackableItem() => _stackCapacity = 1;
+        private void RemoveItemDataFromDatabase() => ItemDatabase.Instance.RemoveItem(_dataId);
 #endif
 
         [Header("Display Settings")]
@@ -129,72 +121,35 @@ namespace _Item_System_.Runtime.Base
         [SerializeField, ShowIf("@_isStackable")] private int _stackCapacity;
         [SerializeField] private bool _isScrappable;
         [SerializeField] private ObtainableType _obtainableType;
+        [SerializeField, ShowIf(nameof(CanCrafting))] private CraftingRequirement[] _craftingRequirement;
+        [SerializeField, ShowIf(nameof(CanCrafting))] private float _craftingDuration;
 
         public int Id => _dataId;
         public string DisplayName => _displayName;
-        public string Description => _displayDescription;
+        public string DisplayDescription => _displayDescription;
         public Sprite Icon => _icon;
         public ItemType ItemType => _itemType;
         public bool Stackable => _isStackable;
         public bool IsSrappable => _isScrappable;
         public int StackCapacity => _stackCapacity;
         public float Weight => _weight;
+        public float CraftingDuration => _craftingDuration;
         public int SellPrice => _sellPrice;
         public ObtainableType ObtainableType => _obtainableType;
+        public CraftingRequirement[] CraftingRequirement => _craftingRequirement;
+        public bool CanCrafting() => (_obtainableType & ObtainableType.Crafting) != 0;
 
-        public void Set_Item_Id(int id)
-        {
-            _dataId = id;
-        }
-
-        public void Set_Item_Display_Name(string name)
-        {
-            _displayName = name;
-        }
-
-        public void Set_Item_Display_Description(string description)
-        {
-            _displayDescription = description;
-        }
-
-        public void Set_Item_Icon(Sprite icon)
-        {
-            _icon = icon;
-        }
-
-        public void Set_Item_Type(ItemType itemType)
-        {
-            _itemType = itemType;
-        }
-
-        public void Set_Item_IsStackable(bool param)
-        {
-            _isScrappable = param;
-        }
-
-        public void Set_Item_Stack_Capacity(int amount)
-        {
-            _stackCapacity = amount;
-        }
-        public void Set_Item_Weight(float weight)
-        {
-            _weight = weight;
-        }
-
-        public void Set_Item_IsSrappable(bool param)
-        {
-            _isScrappable = param;
-        }
-
-        public void Set_Item_ObtainableType(ObtainableType type)
-        {
-            _obtainableType = type;
-        }
-
-        public void Set_Item_Sell_Price(int price)
-        {
-            _sellPrice = price;
-        }
-
+        public void Set_Item_Id(int id) => _dataId = id;
+        public void Set_Item_Display_Name(string name) => _displayName = name;
+        public void Set_Item_Display_Description(string description) => _displayDescription = description;
+        public void Set_Item_Icon(Sprite icon) => _icon = icon;
+        public void Set_Item_Type(ItemType itemType) => _itemType = itemType;
+        public void Set_Item_IsStackable(bool param) => _isScrappable = param;
+        public void Set_Item_Stack_Capacity(int amount) => _stackCapacity = amount;
+        public void Set_Item_Weight(float weight) => _weight = weight;
+        public void Set_Item_IsSrappable(bool param) => _isScrappable = param;
+        public void Set_Item_ObtainableType(ObtainableType type) => _obtainableType = type;
+        public void Set_Item_Sell_Price(int price) => _sellPrice = price;
+        public void Set_Item_Crafting_Duration(float duration) => _craftingDuration = duration;
     }
 }

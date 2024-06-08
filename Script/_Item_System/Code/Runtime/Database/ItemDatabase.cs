@@ -1,4 +1,6 @@
-﻿using _Database_System_.Code.Runtime;
+﻿using System.Collections.Generic;
+using System.Linq;
+using _Database_System_.Code.Runtime;
 using _Item_System_.Runtime.Base;
 using UnityEditor;
 using UnityEngine;
@@ -8,6 +10,8 @@ namespace _Item_System_.Runtime.Database
     public interface ItemDatabaseProvider
     {
         public ItemData GetItemData(int id);
+        public List<ItemData> GetItemsByType<T>() where T : ItemData;
+        public List<ItemData> GetAllItems();
     }
 
     [CreateAssetMenu(fileName = "ItemDatabase", menuName = "_Project_Plan_B/Database/Handle Create ItemDatabase")]
@@ -36,10 +40,26 @@ namespace _Item_System_.Runtime.Database
             }
         }
 
+        //TODO: Base sınıfa taşıycam..
         public ItemData GetItemData(int id)
         {
             ItemData itemData = GetData(id);
             return itemData;
+        }
+
+        //TODO: Base sınıfa taşıycam..
+
+        public List<ItemData> GetAllItems()
+        {
+            return Datas;
+        }
+
+        //TODO: Base sınıfa taşıycam..
+
+        public List<ItemData> GetItemsByType<T>() where T : ItemData
+        {
+            List<ItemData> items = Datas;
+            return items.Where(r => r is T).ToList();
         }
     }
 }
