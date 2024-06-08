@@ -8,3 +8,6 @@
 4.06.2024 Update Inventory System && Add Stat System
 
 ![bandicam2024-06-0410-46-04-889-ezgif com-video-to-gif-converter](https://github.com/alihankvlc/_Project_Plan_B_Survival/assets/147824938/1f0d6194-700d-4a09-87f4-2726772b1b76)
+
+5.08.2024 Inventory Update && Add Equipment System
+https://www.youtube.com/watch?v=Krjzygy3Olw
