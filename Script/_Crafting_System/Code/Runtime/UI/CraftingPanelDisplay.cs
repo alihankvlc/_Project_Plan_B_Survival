@@ -22,30 +22,33 @@ namespace _Crafting_System_.Runtime.UI
 
     public class CraftingPanelDisplay : Singleton<CraftingPanelDisplay>, ICraftingPanel
     {
-        [Header("Window Settings")]
-        [SerializeField] private CanvasGroup _craftingWindowCanvasGroup;
+        [Header("Window Settings")] [SerializeField]
+        private CanvasGroup _craftingWindowCanvasGroup;
 
-        [Header("Crafting Item Display Settings")]
-        [SerializeField] private Image _itemImageContainer;
+        [Header("Crafting Item Display Settings")] [SerializeField]
+        private Image _itemImageContainer;
+
         [SerializeField] private TextMeshProUGUI _itemDescriptionTextMesh;
         [SerializeField] private TextMeshProUGUI _itemNameTextMesh;
         [SerializeField] private TextMeshProUGUI _itemSellPriceTextMesh;
         [SerializeField] private TextMeshProUGUI _itemWeightTextMesh;
 
-        [Header("Requirement Item Settings")]
-        [SerializeField, ReadOnly] private CraftingRequirement[] _craftingRequirements;
+        [Header("Requirement Item Settings")] [SerializeField, ReadOnly]
+        private CraftingRequirement[] _craftingRequirements;
 
-        [Header("Requirement Item Display Settings")]
-        [SerializeField] private CraftingRequirementDisplay[] _requirementDisplays;
+        [Header("Requirement Item Display Settings")] [SerializeField]
+        private CraftingRequirementDisplay[] _requirementDisplays;
 
-        [Header("Crafting Button Settings")]
-        [SerializeField] private GameObject _outputItemQuantityContainer;
+        [Header("Crafting Button Settings")] [SerializeField]
+        private GameObject _outputItemQuantityContainer;
+
         [SerializeField] private Button _craftButton;
         [SerializeField] private Button _craftingQuantityIncreaseButton;
         [SerializeField] private Button _craftingQuantityDecreaseButton;
 
-        [Header("Crafting Output Settings")]
-        [SerializeField] private TMP_InputField _outputItemQuantityInputField;
+        [Header("Crafting Output Settings")] [SerializeField]
+        private TMP_InputField _outputItemQuantityInputField;
+
         [SerializeField] private int _craftingOutputQuantity = 1;
 
         private ISlotManagement _itemSlotManagement;
@@ -55,6 +58,7 @@ namespace _Crafting_System_.Runtime.UI
         private const int OUTPUT_ITEM_QUANTITY_MAX = 999;
 
         public delegate void CraftingItemRequested(ItemData data, int quantity = 1);
+
         public static event CraftingItemRequested OnCraftingItemRequested;
 
         public int CraftingOutputQuantity
@@ -80,6 +84,7 @@ namespace _Crafting_System_.Runtime.UI
             _craftingQuantityDecreaseButton.onClick.AddListener(() => AdjustOutputItemQuantity(-1));
             _outputItemQuantityInputField.onValueChanged.AddListener(OnQuantityInputFieldChanged);
         }
+
         private void Update()
         {
             if (_craftingOutputData == null || !AllRequirementsMet(_craftingOutputData))
@@ -107,7 +112,7 @@ namespace _Crafting_System_.Runtime.UI
             UpdateRequirementDisplays();
 
             _craftingOutputData = data;
-            _craftButton.interactable = AllRequirementsMet(data); //FIXME: Interactable quantity değişitğinde güncellenmiyor.
+            _craftButton.interactable = AllRequirementsMet(data);
         }
 
         public void SetEnableWindow(bool isEnable, ItemData data = null)
@@ -132,7 +137,8 @@ namespace _Crafting_System_.Runtime.UI
             {
                 _requirementDisplays[i].gameObject.SetActive(true);
                 _requirementDisplays[i].SetItemData(_craftingRequirements[i].Data);
-                _requirementDisplays[i].SetBaseRequiredQuantity(_craftingRequirements[i].Quantity * _craftingOutputQuantity);
+                _requirementDisplays[i]
+                    .SetBaseRequiredQuantity(_craftingRequirements[i].Quantity * _craftingOutputQuantity);
             }
 
             for (int i = length; i < _requirementDisplays.Length; i++)
@@ -141,7 +147,8 @@ namespace _Crafting_System_.Runtime.UI
 
         private bool AllRequirementsMet(ItemData data)
         {
-            return data.CraftingRequirement.All(r => CheckItemQuantityInInventory(r.Data.Id, r.Quantity * _craftingOutputQuantity));
+            return data.CraftingRequirement.All(r =>
+                CheckItemQuantityInInventory(r.Data.Id, r.Quantity * _craftingOutputQuantity));
         }
 
         private bool CheckItemQuantityInInventory(int dataId, int count)

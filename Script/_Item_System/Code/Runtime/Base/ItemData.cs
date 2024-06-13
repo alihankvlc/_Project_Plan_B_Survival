@@ -19,10 +19,12 @@ namespace _Item_System_.Runtime.Base
         Looting = 1 << 1,
         Trading = 1 << 2,
     }
+
     public enum ScrappableType
     {
         None,
     }
+
     public enum ItemType
     {
         Consumable,
@@ -30,17 +32,20 @@ namespace _Item_System_.Runtime.Base
         Ammo,
         Resources
     }
+
     public enum ConsumableType
     {
         HealthItems,
         Food,
         Drink,
     }
-    public enum WeaponType
+
+    public enum CombatType
     {
         Melee,
         Firearm,
     }
+
     public enum ResourcesType
     {
         Coal,
@@ -48,6 +53,7 @@ namespace _Item_System_.Runtime.Base
         Stone,
         Iron
     }
+
     public enum FirearmType
     {
         Rifle,
@@ -55,6 +61,7 @@ namespace _Item_System_.Runtime.Base
         Shotgun,
         Bow
     }
+
     public enum AmmoType
     {
         RifleBullet,
@@ -62,14 +69,17 @@ namespace _Item_System_.Runtime.Base
         BowBullet,
         ShotgunBullet,
     }
+
     public enum MeleeType
     {
+        None,
         Ax,
         Bat,
         Shovel,
         Knife,
         Spear
     }
+
     public enum HealthItemType
     {
         Bandage,
@@ -77,15 +87,16 @@ namespace _Item_System_.Runtime.Base
         Painkillers,
         Vitamins
     }
-    public interface IEquippable
-    {
-        public void EquipWeapon(Animator animator, ref bool isEquipped);
-        public void UnequipWeapon(Animator animator, ref bool isEquipped);
-        public void Attack(ref Animator animator, ref bool isEquipped);
-    }
+
+    // public interface IWeaponEquippable
+    // {
+    //     public void EquipWeapon(Action<WeaponData> equipAction, ref bool isEquipped);
+    //     public void UnequipWeapon(Action<WeaponData> unequipAction, ref bool isEquipped);
+    //     public void Attack(Action action = null);
+    // }
+
     public abstract class ItemData : DeletableScriptableObject, IData
     {
-
 #if UNITY_EDITOR
         [SerializeField, Multiline, Space] private string _Editor_Description;
 
@@ -102,27 +113,37 @@ namespace _Item_System_.Runtime.Base
 
         [Button("Destory")]
         private void DestroyButton() => AssetDatabase.DeleteAsset(AssetDatabase.GetAssetPath(this));
+
         protected override void OnDestroy() => RemoveItemDataFromDatabase();
         private void IsNotStackableItem() => _stackCapacity = 1;
         private void RemoveItemDataFromDatabase() => ItemDatabase.Instance.RemoveItem(_dataId);
 #endif
 
-        [Header("Display Settings")]
-        [SerializeField] private string _displayName;
+        [Header("Display Settings")] [SerializeField]
+        private string _displayName;
+
         [SerializeField] private string _displayDescription;
         [SerializeField] private Sprite _icon;
 
-        [Header("Data Settings")]
-        [SerializeField] private int _dataId;
+        [Header("Data Settings")] [SerializeField]
+        private int _dataId;
+
         [SerializeField] private float _weight;
         [SerializeField] private int _sellPrice;
         [SerializeField, ReadOnly] public virtual ItemType _itemType { get; protected set; }
         [SerializeField] private bool _isStackable;
-        [SerializeField, ShowIf("@_isStackable")] private int _stackCapacity;
+
+        [SerializeField, ShowIf("@_isStackable")]
+        private int _stackCapacity;
+
         [SerializeField] private bool _isScrappable;
         [SerializeField] private ObtainableType _obtainableType;
-        [SerializeField, ShowIf(nameof(CanCrafting))] private CraftingRequirement[] _craftingRequirement;
-        [SerializeField, ShowIf(nameof(CanCrafting))] private float _craftingDuration;
+
+        [SerializeField, ShowIf(nameof(CanCrafting))]
+        private CraftingRequirement[] _craftingRequirement;
+
+        [SerializeField, ShowIf(nameof(CanCrafting))]
+        private float _craftingDuration;
 
         public int Id => _dataId;
         public string DisplayName => _displayName;

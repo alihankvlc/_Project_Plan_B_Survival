@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
-namespace _UI_Managment_.Runtime.Common
+
+namespace _UI_Managment_.Runtime.Menu.Common
 {
     public enum MenuType { None = 0, Inventory = 1, Crafting = 2, Skills = 3, Stats = 4 }
 

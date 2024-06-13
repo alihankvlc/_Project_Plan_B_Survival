@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace _UI_Managment_.Runtime.Common
+namespace _UI_Managment_.Runtime.Menu.Common
 {
     public sealed class MenuButtonEventArgs : MonoBehaviour
     {

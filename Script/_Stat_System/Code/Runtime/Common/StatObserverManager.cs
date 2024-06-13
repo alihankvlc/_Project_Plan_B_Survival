@@ -15,25 +15,25 @@ namespace _Stat_System.Runtime.Common
         public void Notify(IStat stat);
     }
 
-    public class StatManager : IStatSubject
+    public class StatObserverManager : IStatSubject
     {
-        private List<IStatObserver> _observers = new List<IStatObserver>();
+        private List<IStatObserver> _statObservers = new();
 
         public void RegisterObserver(IStatObserver observer)
         {
-            if (_observers.Contains(observer)) return;
-            _observers.Add(observer);
+            if (_statObservers.Contains(observer)) return;
+            _statObservers.Add(observer);
         }
 
         public void RemoveObserver(IStatObserver observer)
         {
-            if (!_observers.Contains(observer)) return;
-            _observers.Remove(observer);
+            if (!_statObservers.Contains(observer)) return;
+            _statObservers.Remove(observer);
         }
 
         public void Notify(IStat stat)
         {
-            _observers.ForEach(r => r.OnModifyStat(stat));
+            _statObservers.ForEach(r => r.OnModifyStat(stat));
         }
     }
 }

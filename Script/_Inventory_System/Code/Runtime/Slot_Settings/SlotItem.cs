@@ -34,6 +34,8 @@ namespace _Inventory_System_.Code.Runtime.SlotManagment
         public Slot Slot => _activeSlot;
         public bool IsHoveringSlot => _isHoveringSlot;
 
+        public int SlotInItemDurability => _durability;
+
         public int SlotInItemCount
         {
             get => _slotInItemCount;

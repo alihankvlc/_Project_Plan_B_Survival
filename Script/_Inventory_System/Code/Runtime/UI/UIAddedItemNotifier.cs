@@ -8,7 +8,7 @@ using Sirenix.OdinInspector;
 namespace _Inventory_System_.Code.Runtime.UI
 {
     [RequireComponent(typeof(CanvasGroup))]
-    public sealed class UIAddItemToInventoryInfo : MonoBehaviour
+    public sealed class UIAddedItemNotifier : MonoBehaviour
     {
         [Header("UI Settings")]
         [SerializeField] private Image _icon;
@@ -23,7 +23,7 @@ namespace _Inventory_System_.Code.Runtime.UI
         private CanvasGroup _canvasGroup;
         private Tweener _fadeTweener;
 
-        public event Action<UIAddItemToInventoryInfo> OnDisable;
+        public event Action<UIAddedItemNotifier> OnDisable;
 
         public int Id => _itemId;
 

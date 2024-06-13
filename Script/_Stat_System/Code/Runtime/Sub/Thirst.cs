@@ -7,7 +7,7 @@ namespace _Stat_System.Runtime.Sub
     public class Thirst : Stat
     {
         public override StatType Type => StatType.Thirst;
-        public Thirst(StatManager subject, StatGroup statGroup) : base(subject, statGroup) { }
+        public Thirst(StatObserverManager subject, StatGroup statGroup) : base(subject, statGroup) { }
     }
 }
 

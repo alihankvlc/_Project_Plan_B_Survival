@@ -14,7 +14,6 @@ namespace _Inventory_System_.Code.Runtime.Common
     {
         public void SetSelectionSlot(int index);
         public void UnEquip(Action action = null);
-
         public bool IsEquipped { get; }
     }
 
@@ -27,9 +26,9 @@ namespace _Inventory_System_.Code.Runtime.Common
 
         [SerializeField] private SlotItem _currentEquippedItem;
 
-        [SerializeField] private List<ToolBeltSlot> _toolBeltSlots = new List<ToolBeltSlot>();
+        [SerializeField] private List<ToolBeltSlot> _toolBeltSlots = new();
 
-        private int _selectedSlotIndex = -1;
+        [SerializeField] private int _selectedSlotIndex = -1;
 
         public bool IsEquipped => _currentEquippedItem != null;
 

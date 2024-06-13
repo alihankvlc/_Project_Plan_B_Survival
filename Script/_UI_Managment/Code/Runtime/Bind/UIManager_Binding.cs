@@ -1,7 +1,8 @@
+using _UI_Managment_.Runtime.Common;
 using Zenject;
 using UnityEngine;
 
-namespace _UI_Managment_.Runtime.Common
+namespace _UI_Managment_.Runtime.Bind
 {
     public class UIManager_Binding : MonoInstaller
 {

@@ -5,9 +5,8 @@ using _Other_.Runtime.Code;
 using Sirenix.Utilities;
 using UnityEngine;
 
-namespace _UI_Managment_.Runtime.Common
+namespace _UI_Managment_.Runtime.Menu.Common
 {
-
     public interface IMenuManager
     {
         public void SetMenuState(MenuType menuType);
@@ -18,8 +17,9 @@ namespace _UI_Managment_.Runtime.Common
 
     public sealed class MenuManager : Singleton<MenuManager>, IMenuManager
     {
-        [Header("Menu Settings")]
-        [SerializeField] private List<MenuButtonEventArgs> _menuButtonEventArgs = new();
+        [Header("Menu Settings")] [SerializeField]
+        private List<MenuButtonEventArgs> _menuButtonEventArgs = new();
+
         [SerializeField] private Menu[] _menus;
         [SerializeField] private MenuType _activeMenu = MenuType.None;
         [SerializeField] private GameObject _activeMenuSelectionLine;
@@ -41,12 +41,6 @@ namespace _UI_Managment_.Runtime.Common
 
         private void Update()
         {
-            if (Input.GetKeyUp(KeyCode.Escape) && _activeMenu != MenuType.None) //FIXME: envanter ESC ile kapatıldığında toolbelt kayboluyor.
-            {
-                DisableActiveMenu(_activeMenu);
-                SetMenuState(MenuType.None);
-            }
-
             if (_activeMenu != MenuType.None)
                 NavigateMenu();
         }
@@ -72,7 +66,6 @@ namespace _UI_Managment_.Runtime.Common
 
         public void ToogleCraftingMenu()
         {
-
         }
 
         public void SetMenuState(MenuType menuType)
@@ -105,9 +98,11 @@ namespace _UI_Managment_.Runtime.Common
 
             action?.Invoke();
         }
+
         private void SetSelectionLine(MenuType menuType = MenuType.None, Transform customTransform = null)
         {
-            Transform targetTransform = customTransform ?? _menuButtonEventArgs.FirstOrDefault(r => r.MenuType == menuType)?.transform;
+            Transform targetTransform = customTransform ??
+                                        _menuButtonEventArgs.FirstOrDefault(r => r.MenuType == menuType)?.transform;
 
             if (targetTransform != null)
                 _activeMenuSelectionLine.transform.SetParent(targetTransform, false);
@@ -125,4 +120,3 @@ namespace _UI_Managment_.Runtime.Common
         private void OnDestroy() => _menuButtonEventArgs.ForEach(r => r.OnButtonPressed -= OnPressButtonEvent);
     }
 }
-

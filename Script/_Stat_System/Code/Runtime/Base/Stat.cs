@@ -4,8 +4,26 @@ using Zenject;
 
 namespace _Stat_System.Runtime.Base
 {
-    public enum StatType { Health, Stamina, Thirst, Hunger, Radiation, Experience }
-    public enum StatGroup { Player, Enemy }
+    public interface IDamageable
+    {
+        public void TakeDamage(int amount);
+    }
+
+    public enum StatType
+    {
+        Health,
+        Stamina,
+        Thirst,
+        Hunger,
+        Radiation,
+        Experience
+    }
+
+    public enum StatGroup
+    {
+        Player,
+        Enemy
+    }
 
     public interface IStat
     {
@@ -24,7 +42,7 @@ namespace _Stat_System.Runtime.Base
         public int Value { get; protected set; }
         public int ChangeValue { get; protected set; }
 
-        protected StatManager _subject;
+        protected StatObserverManager _subject;
 
         public virtual int Modify
         {
@@ -44,7 +62,7 @@ namespace _Stat_System.Runtime.Base
             }
         }
 
-        public Stat(StatManager subject, StatGroup statGroup)
+        public Stat(StatObserverManager subject, StatGroup statGroup)
         {
             _subject = subject;
             Group = statGroup;
@@ -56,6 +74,4 @@ namespace _Stat_System.Runtime.Base
             Value = BaseValue;
         }
     }
-
 }
-

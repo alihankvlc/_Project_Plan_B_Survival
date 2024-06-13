@@ -4,6 +4,7 @@ using _Crafting_System_.Runtime.UI;
 using _Inventory_System_.Code.Runtime.Common;
 using _Item_System_.Runtime.Base;
 using _Item_System_.Runtime.Database;
+using _Player_System_.Runtime.Common;
 using Sirenix.OdinInspector;
 using TMPro;
 using UnityEngine;
@@ -11,35 +12,52 @@ using Zenject;
 
 namespace _Crafting_System_.Runtime.Common
 {
-    public enum CraftingType { None, Building, Weapon, Clothes, Food, Health }
-    public enum CraftingStatus { None, CanCraft, CanNotCraft }
+    public enum CraftingType
+    {
+        None,
+        Building,
+        Weapon,
+        Clothes,
+        Food,
+        Health
+    }
+
+    public enum CraftingStatus
+    {
+        None,
+        CanCraft,
+        CanNotCraft
+    }
 
     public class CraftingMenuInitializer : MonoBehaviour
     {
-        [Header("Crafting Content Settings")]
-        [SerializeField] private CraftingMenuItem _bluePrintTabPrefab;
+        [Header("Crafting Content Settings")] [SerializeField]
+        private CraftingMenuItem _bluePrintTabPrefab;
+
         [SerializeField] private Transform _bluePrintTabContainer;
 
-        [Header("Crafting Slot Settings")]
-        [SerializeField] private GameObject _slotPageParent;
+        [Header("Crafting Slot Settings")] [SerializeField]
+        private GameObject _slotPageParent;
 
-        [Header("Crafting Item Display Settings")]
-        [SerializeField] private GameObject _craftingItemDisplay;
+        [Header("Crafting Item Display Settings")] [SerializeField]
+        private GameObject _craftingItemDisplay;
 
         [SerializeField, ReadOnly] private List<CraftingPanelSlotInItemDisplay> _craftingItemDisplays;
         [SerializeField, ReadOnly] private List<CraftingMenuItem> _craftingBlueprintTabs;
 
         private IItemManagement _itemManagement;
         private ItemDatabaseProvider _itemDatabaseProvider;
-
-        public int tempPlayerLevel = 1; //TODO: Stat sisteminde level olmadığı için geçici olarak oluşturuldu.
+        private IPlayerExperienceHandler _playerStat;
 
         [Inject]
-        private void Consturctor(IItemManagement itemManagment, ItemDatabaseProvider itemDatabaseProvider)
+        private void Consturctor(IItemManagement itemManagment, ItemDatabaseProvider itemDatabaseProvider,
+            IPlayerExperienceHandler experienceHandler)
         {
             _itemManagement = itemManagment;
             _itemDatabaseProvider = itemDatabaseProvider;
+            _playerStat = experienceHandler;
         }
+
         private void Start()
         {
             ShowCraftingMenuForItems<WeaponData>();
@@ -55,8 +73,9 @@ namespace _Crafting_System_.Runtime.Common
             CraftingMenuItem weaponBluprintTab = SpawnCraftingBlueprintTab(GetCraftingType(items[0]));
             items.ForEach(weaponData =>
             {
-                CraftingPanelSlotInItemDisplay craftingItemDisplay = SpawnCraftingItemSlot(weaponBluprintTab.CraftingContent.SlotContainer
-                , CraftingType.Weapon, weaponData);
+                CraftingPanelSlotInItemDisplay craftingItemDisplay = SpawnCraftingItemSlot(
+                    weaponBluprintTab.CraftingContent.SlotContainer
+                    , CraftingType.Weapon, weaponData);
 
                 craftingItemDisplay.UpdateDisplay(weaponData, SetCraftingStatus(weaponData.CraftingRequirement));
                 craftingItemDisplay.SetItemLevel(1);
@@ -66,6 +85,7 @@ namespace _Crafting_System_.Runtime.Common
 
             SpawnSlotPage(items.Count, weaponBluprintTab.CraftingContent.PageContainer);
         }
+
         private CraftingMenuItem SpawnCraftingBlueprintTab(CraftingType type)
         {
             GameObject blueprintTab = Instantiate(_bluePrintTabPrefab.gameObject, _bluePrintTabContainer);
@@ -80,7 +100,8 @@ namespace _Crafting_System_.Runtime.Common
         private CraftingPanelSlotInItemDisplay SpawnCraftingItemSlot(Transform parent, CraftingType type, ItemData data)
         {
             GameObject craftingItemDisplay = Instantiate(_craftingItemDisplay, parent);
-            CraftingPanelSlotInItemDisplay display = craftingItemDisplay?.GetComponent<CraftingPanelSlotInItemDisplay>();
+            CraftingPanelSlotInItemDisplay
+                display = craftingItemDisplay?.GetComponent<CraftingPanelSlotInItemDisplay>();
 
             return display;
         }
@@ -92,15 +113,17 @@ namespace _Crafting_System_.Runtime.Common
             if (items == null || items.Count == 0)
                 return null;
 
-            List<ItemData> craftableItems = items.Where(x => x.CanCrafting()).ToList();
+            List<ItemData> craftableItems = items.Where(r => r.CanCrafting()).ToList();
 
             return craftableItems.Count > 0 ? craftableItems : null;
         }
 
+        //FIXME: HER REQUIREMENT ITEM ICIN NEDEN PLAYERLEVEL ISTEDIM BILMIYORUM FAKAT SADECE DATA ICIN REQUIREMENT LEVEL SORGUSU YAP!
         private bool AllRequirementsMet(CraftingRequirement[] requirements)
         {
             foreach (CraftingRequirement requirement in requirements)
-                if (requirement.CheckPlayerLevel(tempPlayerLevel))
+                if (requirement.CheckPlayerLevel(_playerStat
+                        .Level))
                     return false;
 
             return true;
@@ -153,4 +176,3 @@ namespace _Crafting_System_.Runtime.Common
         }
     }
 }
-

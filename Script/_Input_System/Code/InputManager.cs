@@ -11,7 +11,9 @@ namespace _Input_System_.Code.Runtime
         public bool Run { get; }
         public bool Crouch { get; }
         public float MouseScroll { get; }
+        public bool Attack { get; }
     }
+
     public sealed class InputManager : MonoBehaviour, IPlayerInputHandler
     {
         [SerializeField] private PlayerInput _playerInput;
@@ -24,6 +26,7 @@ namespace _Input_System_.Code.Runtime
         private InputAction _aimInputAction;
         private InputAction _inventoryInputAction;
         private InputAction _mouseScrollInputAction;
+        private InputAction _attackInputAction;
 
 
         private const string INPUT_MOVE_ENTRY = "Move";
@@ -32,6 +35,7 @@ namespace _Input_System_.Code.Runtime
         private const string INPUT_AIM_ENTRY = "Aim";
         private const string INPUT_INVENTORY_ENTRY = "Inventory";
         private const string INPUT_MOUSE_SCROLL_ENTRY = "MouseScroll";
+        private const string INPUT_ATTACK_ENTRY = "Attack";
 
         public Vector2 Move { get; private set; }
 
@@ -40,7 +44,7 @@ namespace _Input_System_.Code.Runtime
         public bool Run { get; private set; }
         public bool Crouch { get; private set; }
         public float MouseScroll { get; private set; }
-
+        public bool Attack { get; private set; }
 
         private void Awake()
         {
@@ -52,8 +56,9 @@ namespace _Input_System_.Code.Runtime
             _aimInputAction = _action_Map.FindAction(INPUT_AIM_ENTRY);
             _inventoryInputAction = _action_Map.FindAction(INPUT_INVENTORY_ENTRY);
             _mouseScrollInputAction = _action_Map.FindAction(INPUT_MOUSE_SCROLL_ENTRY);
-
+            _attackInputAction = _action_Map.FindAction(INPUT_ATTACK_ENTRY);
         }
+
         private void OnEnable()
         {
             _action_Map.Enable();
@@ -61,18 +66,24 @@ namespace _Input_System_.Code.Runtime
             _moveInputAction.performed += (InputAction.CallbackContext context) => Move = context.ReadValue<Vector2>();
             _moveInputAction.canceled += (InputAction.CallbackContext context) => Move = context.ReadValue<Vector2>();
 
-            _mouseScrollInputAction.performed += (InputAction.CallbackContext context) => MouseScroll = context.ReadValue<float>();
-            _mouseScrollInputAction.canceled += (InputAction.CallbackContext context) => MouseScroll = context.ReadValue<float>();
+            _mouseScrollInputAction.performed += (InputAction.CallbackContext context) =>
+                MouseScroll = context.ReadValue<float>();
+            _mouseScrollInputAction.canceled += (InputAction.CallbackContext context) =>
+                MouseScroll = context.ReadValue<float>();
 
+            _attackInputAction.performed += (InputAction.CallbackContext context) => Attack = context.ReadValueAsButton();
+            _attackInputAction.canceled += (InputAction.CallbackContext context) => Attack = context.ReadValueAsButton();
+            
             _runInputAction.performed += (InputAction.CallbackContext context) => Run = context.ReadValueAsButton();
             _runInputAction.canceled += (InputAction.CallbackContext context) => Run = context.ReadValueAsButton();
 
-            _crouchInputAction.performed += (InputAction.CallbackContext context) => Crouch = context.ReadValueAsButton();
-            _crouchInputAction.canceled += (InputAction.CallbackContext context) => Crouch = context.ReadValueAsButton();
+            _crouchInputAction.performed +=
+                (InputAction.CallbackContext context) => Crouch = context.ReadValueAsButton();
+            _crouchInputAction.canceled +=
+                (InputAction.CallbackContext context) => Crouch = context.ReadValueAsButton();
 
             _aimInputAction.performed += (InputAction.CallbackContext context) => Aim = context.ReadValueAsButton();
             _aimInputAction.canceled += (InputAction.CallbackContext context) => Aim = context.ReadValueAsButton();
-
         }
 
         private void Update()
@@ -89,18 +100,22 @@ namespace _Input_System_.Code.Runtime
 
             _runInputAction.performed -= (InputAction.CallbackContext context) => Run = context.ReadValueAsButton();
             _runInputAction.canceled -= (InputAction.CallbackContext context) => Run = context.ReadValueAsButton();
+            
+            _attackInputAction.performed -= (InputAction.CallbackContext context) => Attack = context.ReadValueAsButton();
+            _attackInputAction.canceled -= (InputAction.CallbackContext context) => Attack = context.ReadValueAsButton();
 
-            _mouseScrollInputAction.performed -= (InputAction.CallbackContext context) => MouseScroll = context.ReadValue<float>();
-            _mouseScrollInputAction.canceled -= (InputAction.CallbackContext context) => MouseScroll = context.ReadValue<float>();
+            _mouseScrollInputAction.performed -= (InputAction.CallbackContext context) =>
+                MouseScroll = context.ReadValue<float>();
+            _mouseScrollInputAction.canceled -= (InputAction.CallbackContext context) =>
+                MouseScroll = context.ReadValue<float>();
 
-            _crouchInputAction.performed -= (InputAction.CallbackContext context) => Crouch = context.ReadValueAsButton();
-            _crouchInputAction.canceled -= (InputAction.CallbackContext context) => Crouch = context.ReadValueAsButton();
+            _crouchInputAction.performed -=
+                (InputAction.CallbackContext context) => Crouch = context.ReadValueAsButton();
+            _crouchInputAction.canceled -=
+                (InputAction.CallbackContext context) => Crouch = context.ReadValueAsButton();
 
             _aimInputAction.performed -= (InputAction.CallbackContext context) => Aim = context.ReadValueAsButton();
             _aimInputAction.canceled -= (InputAction.CallbackContext context) => Aim = context.ReadValueAsButton();
-
         }
     }
 }
-
-

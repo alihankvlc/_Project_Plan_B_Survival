@@ -4,6 +4,7 @@ using _Input_System_.Code.Runtime;
 using _Inventory_System_.Code.Runtime.SlotManagment;
 using _Other_.Runtime.Code;
 using _UI_Managment_.Runtime.Common;
+using _UI_Managment_.Runtime.Menu.Common;
 using UnityEngine;
 using Zenject;
 
@@ -13,27 +14,30 @@ namespace _Inventory_System_.Code.Runtime.Common
     {
         public List<InventorySlot> GetInventorySlots();
         public List<ToolBeltSlot> GetToolBeltSlots();
-
         public bool InventoryEnable { get; }
     }
+
     public sealed class InventoryManager : Singleton<InventoryManager>, IInventoryManagment
     {
-        [Header("Slot Settings")]
-        [SerializeField] private List<Slot> _slots = new();
+        [Header("Slot Settings")] [SerializeField]
+        private List<Slot> _slots = new();
+
         [SerializeField] private GameObject _inventorySlotPrefab;
         [SerializeField] private GameObject _toolbeltSlotPrefab;
         [SerializeField] private SlotItem _slotItemPrefab;
         [SerializeField] private int _inventoryLockedSlotCount;
 
-        [Space, Header("Inventory Settings")]
-        [SerializeField] private Inventory _inventory;
+        [Space, Header("Inventory Settings")] [SerializeField]
+        private Inventory _inventory;
+
         [SerializeField] private Transform _inventoryParent;
         [SerializeField] private int _inventorySize;
         [SerializeField] private int _inventoryMaxWeight;
         [SerializeField] private bool _inventoryEnable;
 
-        [Header("ToolBelt Settings")]
-        [SerializeField] private Transform _toolBeltPlaceHolder;
+        [Header("ToolBelt Settings")] [SerializeField]
+        private Transform _toolBeltPlaceHolder;
+
         [SerializeField] private int _toolBeltSize;
 
         private IPlayerInputHandler _input;
@@ -46,7 +50,7 @@ namespace _Inventory_System_.Code.Runtime.Common
 
         [Inject]
         private void Constructor(IPlayerInputHandler inputHandler, IMenuManager menuHandler,
-        IVisualHandler uiHandler, SlotHandler slotHandler, InventoryWeight inventoryWeight)
+            IVisualHandler uiHandler, SlotHandler slotHandler, InventoryWeight inventoryWeight)
         {
             _input = inputHandler;
             _menuHandler = menuHandler;
@@ -59,16 +63,15 @@ namespace _Inventory_System_.Code.Runtime.Common
 
             _slotHandler.Init(_slots, _slotItemPrefab);
             _slotHandler.InitializeToolBelt(_toolbeltSlotPrefab, _toolBeltSize, 0, _toolBeltPlaceHolder);
-            _slotHandler.InitializeInventory(_inventorySlotPrefab, _inventorySize, (_slots != null ? _slots.Count : _toolBeltSize) + 1, _inventoryParent);
+            _slotHandler.InitializeInventory(_inventorySlotPrefab, _inventorySize,
+                (_slots != null ? _slots.Count : _toolBeltSize) + 1, _inventoryParent);
         }
 
         private void Update()
         {
-            if (_input.Inventory)
+            if (_input.Inventory || Input.GetKeyDown(KeyCode.Escape) && _inventoryEnable)
             {
-                _menuHandler.ToggleInventoryMenu();
-                _uiHandler.MoveToToolBeltSlot(_menuHandler.ActiveMenu != MenuType.Inventory);
-                _inventoryEnable = _menuHandler.ActiveMenu == MenuType.Inventory;
+                ToggleInventory();
             }
         }
 
@@ -76,10 +79,17 @@ namespace _Inventory_System_.Code.Runtime.Common
         {
             return _slotHandler.Slots.OfType<InventorySlot>().Where(slot => slot.Type == SlotType.Inventory).ToList();
         }
+
         public List<ToolBeltSlot> GetToolBeltSlots()
         {
             return _slotHandler.Slots.OfType<ToolBeltSlot>().Where(slot => slot.Type == SlotType.ToolBelt).ToList();
         }
-    }
 
+        private void ToggleInventory()
+        {
+            _menuHandler.ToggleInventoryMenu();
+            _uiHandler.MoveToToolBeltSlot(_menuHandler.ActiveMenu != MenuType.Inventory);
+            _inventoryEnable = _menuHandler.ActiveMenu == MenuType.Inventory;
+        }
+    }
 }

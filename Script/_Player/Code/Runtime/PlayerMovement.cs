@@ -7,28 +7,32 @@ namespace _Player_System_.Runtime.Common
     [RequireComponent(typeof(Animator), typeof(CharacterController))]
     public sealed class PlayerMovement : MonoBehaviour
     {
-        [Header("Movement Settings")]
-        [SerializeField] private float _walkSpeed = 2.5f;
-        [SerializeField] private float _runSpeed = 5f;
-        [SerializeField] private float _crouchSpeed = 1.5f;
-        [SerializeField] private float _rotationSpeed = 720f;
+        [Header("Movement Settings")] [SerializeField]
+        private float _walkSpeed = 2f;
 
-        [Header("Ground & Gravity Settings")]
-        [SerializeField] private bool _isGrounded = false;
-        [SerializeField] private float _gravity = -9.81f;
-        [SerializeField] private float _groundRadius = 0.14f;
-        [SerializeField] private float _groundOffset = 0f;
+        [SerializeField] private float _runSpeed = 5f;
+        [SerializeField] private float _crouchSpeed = 1.25f;
+        [SerializeField] private float _rotationSpeed = 10f;
+
+        [Header("Ground & Gravity Settings")] [SerializeField]
+        private bool _isGrounded = false;
+
+        [SerializeField] private float _gravity = -25f;
+        [SerializeField] private float _groundRadius = 0.2f;
+        [SerializeField] private float _groundOffset = -0.14f;
         [SerializeField] private LayerMask _groundLayerMask;
 
-        [Header("Animation Settings")]
-        [SerializeField] private float _animDampTime = 0.1f;
+        [Header("Animation Settings")] [SerializeField]
+        private float _animDampTime = 3f;
 
-        [Header("Crouch  Settings")]
-        [SerializeField] private bool _crouchObstacleDetection = false;
-        [SerializeField] private float _obstacleDetectionOffset;
-        [SerializeField] private float _obstacleDetectionRadius;
-        [SerializeField] private Vector3 _crouchCenter = new Vector3(0f, 0.5f, 0f);
-        [SerializeField] private float _crouchHeight;
+        [Header("Crouch  Settings")] [SerializeField]
+        private bool _crouchObstacleDetection = false;
+
+        [SerializeField] private float _obstacleDetectionOffset = 1.35f;
+        [SerializeField] private float _obstacleDetectionRadius = 0.15f;
+        [SerializeField] private Vector3 _crouchCenter = new Vector3(0f, 0.57f, 0f);
+        [SerializeField] private float _crouchHeight = 1f;
+        [SerializeField] private LayerMask _checkObstacleAboveMask;
 
         private Vector3 _verticalVelocity;
         private Vector3 _defaultCenter;
@@ -86,23 +90,8 @@ namespace _Player_System_.Runtime.Common
 
         private void HandleRotation()
         {
-            if (_input.Aim)
-                RotateTowardsMouse();
-            else if (GetMoveDirection() != Vector3.zero)
+            if (GetMoveDirection() != Vector3.zero)
                 RotateTowardsMovement();
-        }
-
-        private void RotateTowardsMouse()
-        {
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            if (Physics.Raycast(ray, out RaycastHit hitInfo))
-            {
-                Vector3 direction = hitInfo.point - transform.position;
-                direction.y = 0;
-
-                Quaternion targetRotation = Quaternion.LookRotation(direction);
-                transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, _rotationSpeed * Time.deltaTime);
-            }
         }
 
         private void RotateTowardsMovement()
@@ -113,7 +102,9 @@ namespace _Player_System_.Runtime.Common
 
         private Vector3 ApplyGravity()
         {
-            _verticalVelocity.y = _isGrounded && _verticalVelocity.y < 0 ? -2f : _verticalVelocity.y + _gravity * Time.deltaTime;
+            _verticalVelocity.y = _isGrounded && _verticalVelocity.y < 0
+                ? -2f
+                : _verticalVelocity.y + _gravity * Time.deltaTime;
             return _verticalVelocity;
         }
 
@@ -121,7 +112,8 @@ namespace _Player_System_.Runtime.Common
         {
             Vector3 spherePosition = GetSpherePosition(_groundOffset);
 
-            _isGrounded = Physics.CheckSphere(spherePosition, _groundRadius, _groundLayerMask, QueryTriggerInteraction.Ignore);
+            _isGrounded = Physics.CheckSphere(spherePosition, _groundRadius, _groundLayerMask,
+                QueryTriggerInteraction.Ignore);
             _animator.SetBool(GROUNDED_HASH_ID, _isGrounded);
 
             return _isGrounded;
@@ -130,7 +122,9 @@ namespace _Player_System_.Runtime.Common
         private bool CheckObstacleAbove()
         {
             Vector3 spherePosition = GetSpherePosition(_obstacleDetectionOffset);
-            _crouchObstacleDetection = Physics.CheckSphere(spherePosition, _obstacleDetectionRadius, _groundLayerMask, QueryTriggerInteraction.Ignore);
+
+            _crouchObstacleDetection =
+                Physics.CheckSphere(spherePosition, _obstacleDetectionRadius, _checkObstacleAboveMask);
 
             return _crouchObstacleDetection;
         }
@@ -148,11 +142,13 @@ namespace _Player_System_.Runtime.Common
 
         private float GetMoveSpeed()
         {
-            _targetSpeed = _input.Move != Vector2.zero ?
-            (_input.Crouch || CheckObstacleAbove() ? _crouchSpeed : (_input.Run ? _runSpeed : _walkSpeed)) : 0f;
+            _targetSpeed = _input.Move != Vector2.zero
+                ? (_input.Crouch || CheckObstacleAbove() ? _crouchSpeed : (_input.Run ? _runSpeed : _walkSpeed))
+                : 0f;
 
             _animator.SetFloat(MOVE_HASH_ID, _targetSpeed, _animDampTime, Time.deltaTime * 30f);
-            _animator.SetBool(CROUCH_HASH_ID, _input.Crouch ? true : !CheckObstacleAbove() ? false : _animator.GetBool(CROUCH_HASH_ID));
+            _animator.SetBool(CROUCH_HASH_ID,
+                _input.Crouch ? true : !CheckObstacleAbove() ? false : _animator.GetBool(CROUCH_HASH_ID));
 
             return _targetSpeed;
         }

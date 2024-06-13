@@ -9,7 +9,7 @@ namespace _Item_System_.Runtime.Base
         [Header("Firearm Settings")]
         [SerializeField] private AmmoType _ammoCategory;
         [SerializeField, Range(2f, 25f)] private float _reloadTime;
-        public override WeaponType WeaponType => WeaponType.Firearm;
+        public override CombatType WeaponType => CombatType.Firearm;
         [SerializeField, ReadOnly] public virtual FirearmType FirearmType { get; protected set; }
     }
 }
