@@ -11,3 +11,7 @@
 
 5.08.2024 Inventory Update && Add Equipment System
 https://www.youtube.com/watch?v=Krjzygy3Olw
+
+
+8.06.2024 Crafting System Added!
+![bandicam2024-06-0820-09-03-329-ezgif com-video-to-gif-converter](https://github.com/alihankvlc/_Project_Plan_B_Survival/assets/147824938/07d77b59-6c05-4627-bbfe-99daa561e1c2)
