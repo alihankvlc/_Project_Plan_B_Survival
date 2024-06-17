@@ -5,25 +5,31 @@ using UnityEngine.EventSystems;
 
 namespace _Inventory_System_.Code.Runtime.SlotManagment
 {
-    public enum SlotType { Inventory, ToolBelt }
-    public enum SlotStatus { Empty, Occupied, Locked }
+    public enum SlotType
+    {
+        Inventory,
+        ToolBelt,
+        Loot
+    }
+
+    public enum SlotStatus
+    {
+        Empty,
+        Occupied,
+        Locked
+    }
 
     public class Slot : SerializedMonoBehaviour, IDropHandler
     {
-        [Header("Slot Settings")]
-        [SerializeField] private SlotStatus _status;
+        [Header("Slot Settings")] [SerializeField]
+        private SlotStatus _status;
+
         [SerializeField] private int _slotIndex;
         [SerializeField] private SlotItem _slotItem;
 
-        private ISlotManagement _slotManagment;
+        protected ISlotManagement _slotManagment;
 
-
-        [SerializeField, ReadOnly]
-        public virtual SlotType Type
-        {
-            get;
-            protected set;
-        }
+        [SerializeField, ReadOnly] public virtual SlotType Type { get; protected set; }
 
         private void Awake() => _slotManagment = Inventory.Instance;
         public SlotItem SlotInItem => _slotItem;
@@ -34,7 +40,7 @@ namespace _Inventory_System_.Code.Runtime.SlotManagment
         public void SetSlotItem(SlotItem slotItem) => _slotItem = slotItem;
         public void SetSlotType(SlotType slotType) => Type = slotType;
 
-        public void OnDrop(PointerEventData eventData)
+        public virtual void OnDrop(PointerEventData eventData)
         {
             if (eventData.pointerDrag == null)
                 return;
@@ -46,5 +52,3 @@ namespace _Inventory_System_.Code.Runtime.SlotManagment
         }
     }
 }
-
-

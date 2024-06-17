@@ -27,6 +27,7 @@ namespace _Item_System_.Runtime.Base
 
     public enum ItemType
     {
+        None,
         Consumable,
         Weapon,
         Ammo,
@@ -38,6 +39,15 @@ namespace _Item_System_.Runtime.Base
         HealthItems,
         Food,
         Drink,
+    }
+
+    public enum Rarity
+    {
+        Common, // Sıradan
+        Uncommon, // Olağanüstü
+        Rare, // Nadir
+        Epic, // Epik
+        Legendary // Efsanevi
     }
 
     public enum CombatType
@@ -87,14 +97,7 @@ namespace _Item_System_.Runtime.Base
         Painkillers,
         Vitamins
     }
-
-    // public interface IWeaponEquippable
-    // {
-    //     public void EquipWeapon(Action<WeaponData> equipAction, ref bool isEquipped);
-    //     public void UnequipWeapon(Action<WeaponData> unequipAction, ref bool isEquipped);
-    //     public void Attack(Action action = null);
-    // }
-
+    
     public abstract class ItemData : DeletableScriptableObject, IData
     {
 #if UNITY_EDITOR
@@ -130,8 +133,12 @@ namespace _Item_System_.Runtime.Base
 
         [SerializeField] private float _weight;
         [SerializeField] private int _sellPrice;
-        [SerializeField, ReadOnly] public virtual ItemType _itemType { get; protected set; }
+
+        [SerializeField, ReadOnly]
+        public virtual ItemType _itemType { get; protected set; } //FIXME : Fix public - protected
+
         [SerializeField] private bool _isStackable;
+        [SerializeField] private Rarity _rarity;
 
         [SerializeField, ShowIf("@_isStackable")]
         private int _stackCapacity;
@@ -150,6 +157,7 @@ namespace _Item_System_.Runtime.Base
         public string DisplayDescription => _displayDescription;
         public Sprite Icon => _icon;
         public ItemType ItemType => _itemType;
+        public Rarity RarityType => _rarity;
         public bool Stackable => _isStackable;
         public bool IsSrappable => _isScrappable;
         public int StackCapacity => _stackCapacity;
@@ -159,7 +167,7 @@ namespace _Item_System_.Runtime.Base
         public ObtainableType ObtainableType => _obtainableType;
         public CraftingRequirement[] CraftingRequirement => _craftingRequirement;
         public bool CanCrafting() => (_obtainableType & ObtainableType.Crafting) != 0;
-
+        public bool IsLootable() => (_obtainableType & ObtainableType.Looting) != 0;
         public void Set_Item_Id(int id) => _dataId = id;
         public void Set_Item_Display_Name(string name) => _displayName = name;
         public void Set_Item_Display_Description(string description) => _displayDescription = description;

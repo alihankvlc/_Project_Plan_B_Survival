@@ -13,7 +13,8 @@ using Sirenix.Utilities;
 
 namespace _Inventory_System_.Code.Runtime.Common
 {
-    public interface IItemManagement // TODO: IItemManagement Inventory içerisinde işleniyor bunu ayrı bir sınıfa taşıyabilirim.
+    public interface
+        IItemManagement // TODO: IItemManagement Inventory içerisinde işleniyor bunu ayrı bir sınıfa taşıyabilirim.
     {
         public void AddItemToInventory(int itemId, int count = 1);
         public void RemoveItemFromInventory(int index, int count = 1);
@@ -21,7 +22,8 @@ namespace _Inventory_System_.Code.Runtime.Common
         public bool HasItemInInventory(int itemId, out SlotItem slotItem);
     }
 
-    public interface ISlotManagement // TODO: ISlotManagment Inventory içerisinde işleniyor bunu ayrı bir sınıfa taşıyabilirim.
+    public interface
+        ISlotManagement // TODO: ISlotManagment Inventory içerisinde işleniyor bunu ayrı bir sınıfa taşıyabilirim.
     {
         public void SwapItem(int currentSlotIndex, int nextSlotIndex);
         public void MoveSlotItem(Slot currentSlot, Slot nextSlot, SlotItem currentSlotItem);
@@ -37,30 +39,34 @@ namespace _Inventory_System_.Code.Runtime.Common
         public bool HasInventorySpace(int itemId, int count = 1);
     }
 
+
     public sealed class Inventory : Singleton<Inventory>, IItemManagement, ISlotManagement, IInventoryState
     {
-        [Header("Inventory Settings")]
-        [SerializeField, ReadOnly] private float _currentWeight;
+        [Header("Inventory Settings")] [SerializeField, ReadOnly]
+        private float _currentWeight;
 
-        [Space, Header("Item Data Settings")]
-        [SerializeField, InlineEditor] private List<SlotItem> _slotsInItems = new List<SlotItem>();
+        [Space, Header("Item Data Settings")] [SerializeField, InlineEditor]
+        private List<SlotItem> _slotsInItems = new List<SlotItem>();
+
         private ItemDatabaseProvider _itemDatabase;
         private InventoryWeight _weightHandler;
-        private SlotHandler _slotHandler;
+        private ISlotManager _slotManager;
         private IToolBeltHandler _toolBeltHandler;
+        private ILootableHandler _lootableHandler;
 
         public float InventoryWeight => _currentWeight;
 
         public static event Action<ItemData, int> OnItemAddedToInventory;
 
         [Inject]
-        private void Constructor(ItemDatabaseProvider itemDatabase, SlotHandler slotHandler,
-        InventoryWeight weightHandler, IToolBeltHandler toolBeltHandler)
+        private void Constructor(ItemDatabaseProvider itemDatabase, ISlotManager slotManager,
+            InventoryWeight weightHandler, IToolBeltHandler toolBeltHandler, ILootableHandler lootableHandler)
         {
             _itemDatabase = itemDatabase;
-            _slotHandler = slotHandler;
+            _slotManager = slotManager;
             _weightHandler = weightHandler;
             _toolBeltHandler = toolBeltHandler;
+            _lootableHandler = lootableHandler;
         }
 
         private void Update()
@@ -69,9 +75,15 @@ namespace _Inventory_System_.Code.Runtime.Common
             {
                 AddItemToInventory(1, 1);
             }
+
             if (Input.GetKeyDown(KeyCode.T))
             {
                 AddItemToInventory(2, 2);
+            }
+
+            if (Input.GetKeyDown(KeyCode.Y))
+            {
+                AddItemToSlot(2, 6, 1);
             }
         }
 
@@ -91,7 +103,8 @@ namespace _Inventory_System_.Code.Runtime.Common
             {
                 if (itemData.Stackable)
                 {
-                    SlotItem slotItem = _slotsInItems.FirstOrDefault(si => si.Data == itemData && si.SlotInItemCount < itemData.StackCapacity);
+                    SlotItem slotItem = _slotsInItems.FirstOrDefault(si =>
+                        si.Data == itemData && si.SlotInItemCount < itemData.StackCapacity);
                     if (slotItem != null)
                     {
                         int availableSpace = itemData.StackCapacity - slotItem.SlotInItemCount;
@@ -110,6 +123,19 @@ namespace _Inventory_System_.Code.Runtime.Common
                 AddItemToNewSlot(itemData, amountToAdd);
                 count -= amountToAdd;
             }
+        }
+
+        public void AddItemToSlot(int itemId, int slotIndex, int count = 1)
+        {
+            ItemData itemData = _itemDatabase.GetItemData(itemId);
+
+            if (itemData == null)
+            {
+                LoggingUtility.Log.Warning(this, $"Item with id {itemId} not found in database", Color.cyan);
+                return;
+            }
+
+            AddItemToSlot(itemId, slotIndex, count);
         }
 
         public void RemoveItemFromInventory(int index, int count = 1)
@@ -169,12 +195,12 @@ namespace _Inventory_System_.Code.Runtime.Common
 
         public void SwapItem(int currentSlotIndex, int nextSlotIndex)
         {
-            Slot currentSlot = _slotHandler.Slots.FirstOrDefault(r => r.Index == currentSlotIndex);
-            Slot nextSlot = _slotHandler.Slots.FirstOrDefault(r => r.Index == nextSlotIndex);
+            Slot currentSlot = _slotManager.AllSlots.FirstOrDefault(r => r.Index == currentSlotIndex);
+            Slot nextSlot = _slotManager.AllSlots.FirstOrDefault(r => r.Index == nextSlotIndex);
 
             if (currentSlot == null || nextSlot == null)
                 return;
-
+            
             SlotItem currentSlotItem = currentSlot.SlotInItem;
             SlotItem nextSlotItem = nextSlot.SlotInItem;
 
@@ -187,8 +213,8 @@ namespace _Inventory_System_.Code.Runtime.Common
                 return;
             }
 
-            if (currentSlotItem.Data.Id != nextSlotItem.Data.Id ||
-                !currentSlotItem.Data.Stackable || !nextSlotItem.Data.Stackable)
+            if ((currentSlotItem.Data.Id != nextSlotItem.Data.Id ||
+                 !currentSlotItem.Data.Stackable || !nextSlotItem.Data.Stackable))
             {
                 SwapSlotItems(currentSlot, nextSlot, currentSlotItem, nextSlotItem);
                 return;
@@ -206,8 +232,9 @@ namespace _Inventory_System_.Code.Runtime.Common
             nextSlot.SetSlotItem(currentSlotItem);
             currentSlot.SetSlotItem(null);
 
+
             if (currentSlot is ToolBeltSlot currentToolBeltSlot && currentToolBeltSlot.IsSelectedSlot
-            || (nextSlot is ToolBeltSlot nextToolBeltSlot && nextToolBeltSlot.IsSelectedSlot))
+                || (nextSlot is ToolBeltSlot nextToolBeltSlot && nextToolBeltSlot.IsSelectedSlot))
             {
                 _toolBeltHandler.UnEquip();
             }
@@ -248,10 +275,11 @@ namespace _Inventory_System_.Code.Runtime.Common
         public int GetItemQuantity(int itemId)
         {
             return _slotsInItems.Where(slotItem =>
-            slotItem.Data.Id == itemId).Sum(slotItem => slotItem.SlotInItemCount);
+                slotItem.Data.Id == itemId).Sum(slotItem => slotItem.SlotInItemCount);
         }
 
-        private void ProcessSameTypeItems(Slot currentSlot, Slot nextSlot, SlotItem currentSlotItem, SlotItem nextSlotItem)
+        private void ProcessSameTypeItems(Slot currentSlot, Slot nextSlot, SlotItem currentSlotItem,
+            SlotItem nextSlotItem)
         {
             if (!currentSlotItem.Data.Stackable || !nextSlotItem.Data.Stackable)
                 return;
@@ -276,17 +304,28 @@ namespace _Inventory_System_.Code.Runtime.Common
             }
         }
 
+        private void AddItemToSlot(ItemData data, int slotIndex, int count = 1)
+        {
+            Slot availableSlot = _slotManager.AllSlots.FirstOrDefault(r => r.Index == slotIndex);
+            AddItemToSlotInternal(data, availableSlot, count);
+        }
+
         private void AddItemToNewSlot(ItemData data, int count)
         {
-            Slot availableSlot = _slotHandler.FindAvailableSlot(data);
-            if (availableSlot == null) return;
+            Slot availableSlot = _slotManager.FindAvailableSlot(data);
+            AddItemToSlotInternal(data, availableSlot, count);
+        }
 
-            GameObject displayItem = Instantiate(_slotHandler.SlotItem.gameObject, availableSlot.transform);
+
+        private void AddItemToSlotInternal(ItemData data, Slot slot, int count)
+        {
+            GameObject displayItem = Instantiate(_slotManager.SlotItem.gameObject, slot.transform);
             SlotItem slotItemContent = displayItem.GetComponent<SlotItem>();
+
             displayItem.name = data.DisplayName;
 
-            slotItemContent.Constructor(data, availableSlot, count);
-            availableSlot.SetSlotStatus(SlotStatus.Occupied);
+            slotItemContent.Constructor(data, slot, count);
+            slot.SetSlotStatus(SlotStatus.Occupied);
             _slotsInItems.Add(slotItemContent);
             UpdateInventoryWeight(data.Weight * count);
 
@@ -295,6 +334,14 @@ namespace _Inventory_System_.Code.Runtime.Common
 
         private void SwapSlotItems(Slot currentSlot, Slot nextSlot, SlotItem currentSlotItem, SlotItem nextSlotItem)
         {
+            bool check = (currentSlot.Type is SlotType.Inventory or SlotType.ToolBelt) && nextSlot.Type == SlotType.Loot;
+            bool reverseCheck = (nextSlot.Type is SlotType.Inventory or SlotType.ToolBelt) && currentSlot.Type == SlotType.Loot;
+            
+            if (check || reverseCheck)
+            {
+                return;
+            }
+            
             currentSlotItem.MoveToSlot(nextSlot);
             nextSlotItem.MoveToSlot(currentSlot);
 
@@ -302,14 +349,28 @@ namespace _Inventory_System_.Code.Runtime.Common
             currentSlot.SetSlotStatus(nextSlot.Status);
             nextSlot.SetSlotStatus(tempStatus);
 
-            int currentIndex = _slotsInItems.IndexOf(currentSlotItem);
-            int nextIndex = _slotsInItems.IndexOf(nextSlotItem);
+            int currentIndex;
+            int nextIndex;
+
+            if (currentSlot.Type == SlotType.Loot && nextSlot.Type == SlotType.Loot)
+            {
+                currentIndex = _lootableHandler.ActiveLootInItems.IndexOf(currentSlotItem);
+                nextIndex = _lootableHandler.ActiveLootInItems.IndexOf(nextSlotItem);
+
+                _lootableHandler.ActiveLootInItems[currentIndex] = nextSlotItem;
+                _lootableHandler.ActiveLootInItems[nextIndex] = currentSlotItem;
+
+                return;
+            }
+
+            currentIndex = _slotsInItems.IndexOf(currentSlotItem);
+            nextIndex = _slotsInItems.IndexOf(nextSlotItem);
 
             _slotsInItems[currentIndex] = nextSlotItem;
             _slotsInItems[nextIndex] = currentSlotItem;
 
             if ((currentSlot is ToolBeltSlot currentToolBeltSlot && currentToolBeltSlot.IsSelectedSlot)
-            || (nextSlot is ToolBeltSlot nextToolbeltSlot && nextToolbeltSlot.IsSelectedSlot))
+                || (nextSlot is ToolBeltSlot nextToolbeltSlot && nextToolbeltSlot.IsSelectedSlot))
             {
                 _toolBeltHandler.UnEquip();
             }
@@ -321,19 +382,22 @@ namespace _Inventory_System_.Code.Runtime.Common
                 if (slotItem.SlotInItemCount < data.StackCapacity)
                     return true;
 
-            return _slotsInItems.Count < _slotHandler.Slots.Count;
+            return _slotsInItems.Count < GetInventoryAndToolbeltCapcity();
         }
 
         private bool HasSpaceForNonStackableItem()
         {
-            return _slotsInItems.Count < _slotHandler.Slots.Count;
+            return _slotsInItems.Count < GetInventoryAndToolbeltCapcity();
+        }
+
+        private int GetInventoryAndToolbeltCapcity()
+        {
+            return _slotManager.InventorySlots.Count + _slotManager.ToolBeltSlots.Count;
         }
 
         private void UpdateInventoryWeight(float weightChange)
         {
             _weightHandler.IncreaseWeight(weightChange, ref _currentWeight);
         }
-
     }
 }
-

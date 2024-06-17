@@ -12,6 +12,7 @@ namespace _Input_System_.Code.Runtime
         public bool Crouch { get; }
         public float MouseScroll { get; }
         public bool Attack { get; }
+        public bool FindItem { get; }
     }
 
     public sealed class InputManager : MonoBehaviour, IPlayerInputHandler
@@ -27,6 +28,7 @@ namespace _Input_System_.Code.Runtime
         private InputAction _inventoryInputAction;
         private InputAction _mouseScrollInputAction;
         private InputAction _attackInputAction;
+        private InputAction _itemFindInputAction;
 
 
         private const string INPUT_MOVE_ENTRY = "Move";
@@ -36,6 +38,7 @@ namespace _Input_System_.Code.Runtime
         private const string INPUT_INVENTORY_ENTRY = "Inventory";
         private const string INPUT_MOUSE_SCROLL_ENTRY = "MouseScroll";
         private const string INPUT_ATTACK_ENTRY = "Attack";
+        private const string INPUT_ITEM_FIND_ENTRY = "ItemFind";
 
         public Vector2 Move { get; private set; }
 
@@ -45,6 +48,7 @@ namespace _Input_System_.Code.Runtime
         public bool Crouch { get; private set; }
         public float MouseScroll { get; private set; }
         public bool Attack { get; private set; }
+        public bool FindItem { get; private set; }
 
         private void Awake()
         {
@@ -57,6 +61,7 @@ namespace _Input_System_.Code.Runtime
             _inventoryInputAction = _action_Map.FindAction(INPUT_INVENTORY_ENTRY);
             _mouseScrollInputAction = _action_Map.FindAction(INPUT_MOUSE_SCROLL_ENTRY);
             _attackInputAction = _action_Map.FindAction(INPUT_ATTACK_ENTRY);
+            _itemFindInputAction = _action_Map.FindAction(INPUT_ITEM_FIND_ENTRY);
         }
 
         private void OnEnable()
@@ -71,9 +76,11 @@ namespace _Input_System_.Code.Runtime
             _mouseScrollInputAction.canceled += (InputAction.CallbackContext context) =>
                 MouseScroll = context.ReadValue<float>();
 
-            _attackInputAction.performed += (InputAction.CallbackContext context) => Attack = context.ReadValueAsButton();
-            _attackInputAction.canceled += (InputAction.CallbackContext context) => Attack = context.ReadValueAsButton();
-            
+            _attackInputAction.performed +=
+                (InputAction.CallbackContext context) => Attack = context.ReadValueAsButton();
+            _attackInputAction.canceled +=
+                (InputAction.CallbackContext context) => Attack = context.ReadValueAsButton();
+
             _runInputAction.performed += (InputAction.CallbackContext context) => Run = context.ReadValueAsButton();
             _runInputAction.canceled += (InputAction.CallbackContext context) => Run = context.ReadValueAsButton();
 
@@ -89,6 +96,7 @@ namespace _Input_System_.Code.Runtime
         private void Update()
         {
             Inventory = _inventoryInputAction.WasPressedThisFrame();
+            FindItem = _itemFindInputAction.WasPerformedThisFrame();
         }
 
         private void OnDisable()
@@ -100,9 +108,11 @@ namespace _Input_System_.Code.Runtime
 
             _runInputAction.performed -= (InputAction.CallbackContext context) => Run = context.ReadValueAsButton();
             _runInputAction.canceled -= (InputAction.CallbackContext context) => Run = context.ReadValueAsButton();
-            
-            _attackInputAction.performed -= (InputAction.CallbackContext context) => Attack = context.ReadValueAsButton();
-            _attackInputAction.canceled -= (InputAction.CallbackContext context) => Attack = context.ReadValueAsButton();
+
+            _attackInputAction.performed -=
+                (InputAction.CallbackContext context) => Attack = context.ReadValueAsButton();
+            _attackInputAction.canceled -=
+                (InputAction.CallbackContext context) => Attack = context.ReadValueAsButton();
 
             _mouseScrollInputAction.performed -= (InputAction.CallbackContext context) =>
                 MouseScroll = context.ReadValue<float>();

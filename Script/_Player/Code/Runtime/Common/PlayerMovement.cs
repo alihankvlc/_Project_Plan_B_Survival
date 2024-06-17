@@ -13,6 +13,7 @@ namespace _Player_System_.Runtime.Common
         [SerializeField] private float _runSpeed = 5f;
         [SerializeField] private float _crouchSpeed = 1.25f;
         [SerializeField] private float _rotationSpeed = 10f;
+        [SerializeField] private float _aimSpeed = 1.30f;
 
         [Header("Ground & Gravity Settings")] [SerializeField]
         private bool _isGrounded = false;
@@ -40,20 +41,20 @@ namespace _Player_System_.Runtime.Common
         private float _targetSpeed;
         private float _defaultHeight;
 
+        private float _hVelocityInput = 0f;
+        private float _vVelocityInput = 0f;
+
         private Animator _animator;
         private CharacterController _controller;
 
         private IPlayerInputHandler _input;
 
 
-        private const string MOVE_HASH_ENTRY = "OnMove";
-        private readonly int MOVE_HASH_ID = Animator.StringToHash(MOVE_HASH_ENTRY);
-
-        private const string GROUNDED_HASH_ENTRY = "OnGround";
-        private readonly int GROUNDED_HASH_ID = Animator.StringToHash(GROUNDED_HASH_ENTRY);
-
-        private const string CROUCH_HASH_ENTRY = "OnCrouch";
-        private readonly int CROUCH_HASH_ID = Animator.StringToHash(CROUCH_HASH_ENTRY);
+        private readonly int MOVE_HASH_ID = Animator.StringToHash("OnMove");
+        private readonly int GROUNDED_HASH_ID = Animator.StringToHash("OnGround");
+        private readonly int CROUCH_HASH_ID = Animator.StringToHash("OnCrouch");
+        private readonly int H_VELOCITY_HASH_ID = Animator.StringToHash("H_Velocity");
+        private readonly int V_VELOCITY_HASH_ID = Animator.StringToHash("V_Velocity");
 
         [Inject]
         public void Construct(IPlayerInputHandler inputProvider)
@@ -105,6 +106,7 @@ namespace _Player_System_.Runtime.Common
             _verticalVelocity.y = _isGrounded && _verticalVelocity.y < 0
                 ? -2f
                 : _verticalVelocity.y + _gravity * Time.deltaTime;
+
             return _verticalVelocity;
         }
 
@@ -114,8 +116,8 @@ namespace _Player_System_.Runtime.Common
 
             _isGrounded = Physics.CheckSphere(spherePosition, _groundRadius, _groundLayerMask,
                 QueryTriggerInteraction.Ignore);
-            _animator.SetBool(GROUNDED_HASH_ID, _isGrounded);
 
+            _animator.SetBool(GROUNDED_HASH_ID, _isGrounded);
             return _isGrounded;
         }
 
@@ -131,9 +133,32 @@ namespace _Player_System_.Runtime.Common
 
         private Vector3 GetMoveDirection()
         {
-            Vector3 inputDirection = new(_input.Move.x, 0, _input.Move.y);
-            return inputDirection;
+            Vector3 forwardDirection = Quaternion.Euler(0, transform.eulerAngles.y, 0) * Vector3.forward;
+            Vector3 rightDirection = Quaternion.Euler(0, transform.eulerAngles.y, 0) * Vector3.right;
+
+            Vector2 moveInput = _input.Move.normalized;
+            Vector3 moveDirection = moveInput.x * rightDirection + moveInput.y * forwardDirection;
+
+            moveDirection.y = 0;
+
+            _hVelocityInput = _input.Move != Vector2.zero ? moveDirection.x : 0.0f;
+            _vVelocityInput = _input.Move != Vector2.zero ? moveDirection.z : 0.0f;
+            
+            _animator.SetFloat(H_VELOCITY_HASH_ID, _hVelocityInput, _animDampTime, Time.deltaTime * 30f);
+            _animator.SetFloat(V_VELOCITY_HASH_ID, _vVelocityInput, _animDampTime, Time.deltaTime * 30f);
+
+            if (!_input.Aim)
+            {
+                _animator.SetFloat(MOVE_HASH_ID, _targetSpeed, _animDampTime, Time.deltaTime * 30f);
+                _animator.SetBool(CROUCH_HASH_ID,
+                    _input.Crouch ? true :
+                    !CheckObstacleAbove() ? false : _animator.GetBool(CROUCH_HASH_ID));
+            }
+            
+            
+            return new Vector3(_input.Move.x, 0, _input.Move.y);
         }
+
 
         private Vector3 GetSpherePosition(float offset)
         {
@@ -143,12 +168,10 @@ namespace _Player_System_.Runtime.Common
         private float GetMoveSpeed()
         {
             _targetSpeed = _input.Move != Vector2.zero
-                ? (_input.Crouch || CheckObstacleAbove() ? _crouchSpeed : (_input.Run ? _runSpeed : _walkSpeed))
+                ? ((_input.Crouch || CheckObstacleAbove() && !_input.Aim)
+                    ? _crouchSpeed
+                    : (_input.Run && !_input.Aim ? _runSpeed : _input.Aim ? _aimSpeed : _walkSpeed))
                 : 0f;
-
-            _animator.SetFloat(MOVE_HASH_ID, _targetSpeed, _animDampTime, Time.deltaTime * 30f);
-            _animator.SetBool(CROUCH_HASH_ID,
-                _input.Crouch ? true : !CheckObstacleAbove() ? false : _animator.GetBool(CROUCH_HASH_ID));
 
             return _targetSpeed;
         }

@@ -33,9 +33,11 @@ namespace _Player_System_.Runtime.Combat.Base
 
         private LayerMask _groundLayerMask;
 
+        private readonly int AIM_HASH_ID = Animator.StringToHash("OnAim");
+
         private const string ITEM_NEEDED_REPAIR_TEXT = "The item needs repair!";
         private const string GROUND_LAYER_NAME = "Ground";
-
+        
         [Inject]
         private void Constructor(IPlayerInputHandler playerInputHandler, IPlayerComponent component)
         {
@@ -53,8 +55,12 @@ namespace _Player_System_.Runtime.Combat.Base
 
         protected virtual void Update()
         {
+            PlayerComponent.Animator.SetBool(AIM_HASH_ID, PlayerInputHandler.Aim);
+
             if (PlayerInputHandler.Aim)
+            {
                 RotateTowardsMouse();
+            }
 
             if (ActiveSlot == null || ActiveWeaponData == null)
             {

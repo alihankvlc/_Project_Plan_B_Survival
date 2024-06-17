@@ -1,6 +1,7 @@
 using System;
 using _Crafting_System_.Runtime.UI;
 using _Inventory_System_.Code.Runtime.Common;
+using _Inventory_System_.Code.Runtime.UI;
 using _Item_System_.Runtime.Base;
 using Sirenix.OdinInspector;
 using TMPro;
@@ -10,15 +11,18 @@ using Zenject;
 
 public class CraftingRequirementDisplay : MonoBehaviour
 {
-    [Header("Crafting Requirement Settings")]
-    [SerializeField] private int _requiredQuantity;
+    [Header("Crafting Requirement Settings")] [SerializeField]
+    private int _requiredQuantity;
+
     [SerializeField] private int _baseRequiredQuantity;
     [SerializeField, ReadOnly] private int _currentQuantity = 0;
 
-    [Header("Display Settings")]
-    [SerializeField] private TextMeshProUGUI _quantityText;
+    [Header("Display Settings")] [SerializeField]
+    private TextMeshProUGUI _quantityText;
+
     [SerializeField] private Image _requirementImage;
 
+    private IWindowFromInventoryHandler _inventoryWindow;
     private ISlotManagement _itemSlotManagment;
     private ICraftingPanel _craftingPanel;
     private ItemData _itemData;
@@ -28,20 +32,22 @@ public class CraftingRequirementDisplay : MonoBehaviour
     public int BaseRequiredQuantity => _baseRequiredQuantity;
 
     [Inject]
-    private void Consturctor(ISlotManagement itemSlotManagment, ICraftingPanel craftingPanel)
+    private void Consturctor(ISlotManagement itemSlotManagment, ICraftingPanel craftingPanel,
+        IWindowFromInventoryHandler inventoryWindow)
     {
         _itemSlotManagment = itemSlotManagment;
         _craftingPanel = craftingPanel;
+        _inventoryWindow = inventoryWindow;
     }
 
     private void Update()
     {
-        if (InventoryManager.Instance.InventoryEnable && _itemData != null) /*TODO: Geçici olarak inventory atadım ama değiştirip crafting menu yapmam lazım ve
-        */
+        if (_inventoryWindow.IsWindowEnable && _itemData != null)
         {
             CheckItemQuantityInInventory(_itemData.Id, ref _currentQuantity);
         }
     }
+
     public void SetItemData(ItemData data)
     {
         _itemData = data;
@@ -88,5 +94,4 @@ public class CraftingRequirementDisplay : MonoBehaviour
 
         UpdateCurrentQuantity(itemCount);
     }
-
 }

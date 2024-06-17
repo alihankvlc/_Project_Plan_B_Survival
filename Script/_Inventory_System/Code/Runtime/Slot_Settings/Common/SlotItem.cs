@@ -7,21 +7,30 @@ using UnityEngine.EventSystems;
 
 namespace _Inventory_System_.Code.Runtime.SlotManagment
 {
-    public enum StackType { Increase, Decrease }
-    public sealed class SlotItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
-
+    public enum StackType
     {
-        [Header("Slot Settings")]
-        [SerializeField, ReadOnly] private Slot _activeSlot;
+        Increase,
+        Decrease
+    }
+
+    public sealed class SlotItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
+    {
+        [Header("Slot Settings")] [SerializeField, ReadOnly]
+        private Slot _activeSlot;
+
         [SerializeField, ReadOnly] private int _activeSlotIndex;
+        [SerializeField, ReadOnly] private SlotType _activeSlotType;
 
-        [Header("Slot in Item Settings")]
-        [SerializeField] private ItemData _data;
+        [Header("Slot in Item Settings")] [SerializeField]
+        private ItemData _data;
+
         [SerializeField] private int _slotInItemCount;
-        [SerializeField, ShowIf("@_data is WeaponData")] private int _durability;
 
-        [Header("UI Settings")]
-        [SerializeField] private ItemDisplay _display;
+        [SerializeField, ShowIf("@_data is WeaponData")]
+        private int _durability;
+
+        [Header("UI Settings")] [SerializeField]
+        private ItemDisplay _display;
 
         private bool _isHoveringSlot;
         private CanvasGroup _canvasGroup;
@@ -56,15 +65,22 @@ namespace _Inventory_System_.Code.Runtime.SlotManagment
         {
             _data = data;
             _slotInItemCount = count;
+            
             _activeSlot = slot;
+            _activeSlotType = _activeSlot.Type;
+            _activeSlotIndex = slot.Index;
 
             _display.UpdateSlotDisplay(_data, count);
             _durability = (data is WeaponData weaponData) ? weaponData.Durability : 0;
 
             slot.SetSlotItem(this);
         }
+
         public void OnBeginDrag(PointerEventData eventData)
         {
+            if (eventData.button != PointerEventData.InputButton.Left)
+                return;
+            
             _parentAfterSlot = _activeSlot;
             ParentAfterDrag = transform.parent;
 
@@ -73,11 +89,13 @@ namespace _Inventory_System_.Code.Runtime.SlotManagment
 
             _display.DisableUIElements();
             _display.ItemImage.raycastTarget = false;
-
         }
 
         public void OnDrag(PointerEventData eventData)
         {
+            if (eventData.button != PointerEventData.InputButton.Left)
+                return;
+            
             _isHoveringSlot = true;
 
             _display.ItemImage.transform.position = Input.mousePosition;
@@ -85,14 +103,15 @@ namespace _Inventory_System_.Code.Runtime.SlotManagment
         }
 
         public void OnEndDrag(PointerEventData eventData)
-        {            
+        {
             _canvasGroup.alpha = 1;
             _display.EnableUIElements();
 
             _display.ItemImage.raycastTarget = true;
             transform.SetParent(ParentAfterDrag);
 
-            _reftTransform.localPosition = new Vector3(_reftTransform.localPosition.x, _reftTransform.localPosition.y, 0);
+            _reftTransform.localPosition =
+                new Vector3(_reftTransform.localPosition.x, _reftTransform.localPosition.y, 0);
             _isHoveringSlot = false;
         }
 
@@ -105,6 +124,7 @@ namespace _Inventory_System_.Code.Runtime.SlotManagment
         {
             _activeSlot = nextSlot;
             _activeSlotIndex = _activeSlot.Index;
+            _activeSlotType = _activeSlot.Type;
 
             _parentAfterSlot = _activeSlot;
             ParentAfterDrag = _activeSlot.transform;

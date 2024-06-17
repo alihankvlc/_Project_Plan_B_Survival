@@ -28,8 +28,8 @@ namespace _Zombie_System_.Runtime.Common
         private CapsuleCollider _capsuleCollider;
         private Animator _animator;
 
-        private readonly int ENEMY_ALIVE_HASH_ID = Animator.StringToHash("IsAlive");
-        private readonly int ENEMY_TAKE_HIT_HASH_ID = Animator.StringToHash("TakeHit");
+        private static readonly int ENEMY_ALIVE_HASH_ID = Animator.StringToHash("IsAlive");
+        private static readonly int ENEMY_TAKE_HIT_HASH_ID = Animator.StringToHash("TakeHit");
 
         private void Start()
         {

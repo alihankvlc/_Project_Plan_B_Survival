@@ -73,6 +73,12 @@ namespace _UI_Managment_.Runtime.Common
         [SerializeField] private Transform _toolBeltInventoryParent;
         [SerializeField] private Transform _toolBeltDefaultParent;
 
+        [Header("Looting Timer UI Settings")] [SerializeField]
+        private TextMeshProUGUI _lootingTimerTextMesh;
+
+        [SerializeField] private Slider _lootingTimerSlider;
+        [SerializeField] private GameObject _lootingTimerParent;
+
 
         private List<UIExperienceGainNotifier> _uiExperienceGainNotifierInfos = new();
         private List<UIAddedItemNotifier> _uiAddItemNotifierInfos = new();
@@ -80,12 +86,6 @@ namespace _UI_Managment_.Runtime.Common
         private StatObserverManager _statObserverSubject;
         private IMenuManager _menuManager;
         private Tween _fadeInTween;
-
-        private const int STAT_FIRST_INDICATOR_LEVEL = 1;
-        private const int STAT_SECOND_INDICATOR_LEVEL = 2;
-        private const int STAT_THIRD_INDICATOR_LEVEL = 3;
-        private const int STAT_FIRST_INDICATOR_THRESHOLD = 5;
-        private const int STAT_SECOND_INDICATOR_THRESHOLD = 15;
 
         private const float FADE_IN_DELAY_DURATION = 2f;
 
@@ -110,6 +110,8 @@ namespace _UI_Managment_.Runtime.Common
 
             Experience.OnChangeLevel += OnPlayerLevelUp;
             PlayerStatHandler.OnExperienceGainedEvent += ExperienceGainNotifier;
+
+            LootManager.OnLootTimerUpdateEvent += SetLootTimer;
         }
 
         private void Update()
@@ -247,6 +249,15 @@ namespace _UI_Managment_.Runtime.Common
             slider.fillRect.GetComponent<Image>().color = checkThreshold ? color : Color.white;
         }
 
+        private void SetLootTimer(int duration, float timer, bool isEnable)
+        {
+            _lootingTimerParent.SetActive(isEnable);
+            _lootingTimerTextMesh.SetText(timer.ToString("F1"));
+
+            _lootingTimerSlider.maxValue = duration;
+            _lootingTimerSlider.value = timer;
+        }
+
         private void GameObjectEnableFadeIn(GameObject gameObject, float time)
         {
             SetEnableGameObject(gameObject, true);
@@ -268,6 +279,7 @@ namespace _UI_Managment_.Runtime.Common
 
             Experience.OnChangeLevel -= OnPlayerLevelUp;
             PlayerStatHandler.OnExperienceGainedEvent -= ExperienceGainNotifier;
+            LootManager.OnLootTimerUpdateEvent -= SetLootTimer;
         }
     }
 }

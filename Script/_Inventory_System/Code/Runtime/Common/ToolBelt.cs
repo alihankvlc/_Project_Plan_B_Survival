@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using _Other_.Runtime.Code;
 using System;
-
+using _Inventory_System_.Code.Runtime.UI;
 
 namespace _Inventory_System_.Code.Runtime.Common
 {
@@ -17,16 +17,16 @@ namespace _Inventory_System_.Code.Runtime.Common
         public bool IsEquipped { get; }
     }
 
-    public sealed class ToolBelt : Singleton<ToolBelt>, IToolBeltHandler
+    public sealed class ToolBelt : MonoBehaviour, IToolBeltHandler
     {
         private const int _toolbeltSize = 4;
 
         private ISlotManagement _slotManagement;
-        private IInventoryManagment _inventoryManagment;
+        private ISlotManager _slotInitializerHandler;
+        private IWindowFromInventoryHandler _inventoryWindow;
 
         [SerializeField] private SlotItem _currentEquippedItem;
 
-        [SerializeField] private List<ToolBeltSlot> _toolBeltSlots = new();
 
         [SerializeField] private int _selectedSlotIndex = -1;
 
@@ -36,20 +36,18 @@ namespace _Inventory_System_.Code.Runtime.Common
         public static event Action<SlotItem> OnItemUnequipped;
 
         [Inject]
-        private void Constructor(ISlotManagement slotManagement, IInventoryManagment inventoryManagment)
+        private void Constructor(ISlotManagement slotManagement,
+            ISlotManager slotManager,
+            IWindowFromInventoryHandler inventoryWindow)
         {
             _slotManagement = slotManagement;
-            _inventoryManagment = inventoryManagment;
-        }
-
-        private void Start()
-        {
-            _toolBeltSlots = _inventoryManagment.GetToolBeltSlots();
+            _slotInitializerHandler = slotManager;
+            _inventoryWindow = inventoryWindow;
         }
 
         private void Update()
         {
-            if (InventoryManager.Instance.InventoryEnable) return;
+            if (_inventoryWindow != null && _inventoryWindow.IsWindowEnable) return;
 
             for (int i = 0; i < _toolbeltSize; i++)
                 SlotSelectionByKey(i);
@@ -57,13 +55,13 @@ namespace _Inventory_System_.Code.Runtime.Common
 
         public void SlotSelectionByKey(int index)
         {
-            if (Input.GetKeyDown(KeyCode.Alpha1 + index) && !InventoryManager.Instance.InventoryEnable)
+            if (Input.GetKeyDown(KeyCode.Alpha1 + index) && !_inventoryWindow.IsWindowEnable)
                 SetSelectionSlot(index);
         }
 
         public void SetSelectionSlot(int index)
         {
-            if (_slotManagement.HasItemInSlotOfType(SlotType.ToolBelt, index, out SlotItem slotInItem))
+            if (_slotManagement != null && _slotManagement.HasItemInSlotOfType(SlotType.ToolBelt, index, out SlotItem slotInItem))
             {
                 if (_selectedSlotIndex == index)
                     return;
@@ -72,12 +70,12 @@ namespace _Inventory_System_.Code.Runtime.Common
 
                 _selectedSlotIndex = index;
 
-                for (int i = 0; i < _toolBeltSlots.Count; i++)
+                for (int i = 0; i < _slotInitializerHandler.ToolBeltSlots.Count; i++)
                 {
                     if (i == index)
-                        _toolBeltSlots[i].Select();
+                        _slotInitializerHandler.ToolBeltSlots[i].Select();
                     else
-                        _toolBeltSlots[i].Deselect();
+                        _slotInitializerHandler.ToolBeltSlots[i].Deselect();
                 }
 
                 SetEquipmentItem(slotInItem);
@@ -88,20 +86,22 @@ namespace _Inventory_System_.Code.Runtime.Common
 
         public void UnEquip(Action action = null)
         {
+            if (_currentEquippedItem == null) return;
+
             OnItemUnequipped?.Invoke(_currentEquippedItem);
             action?.Invoke();
 
             _currentEquippedItem = null;
 
-            for (int i = 0; i < _toolBeltSlots.Count; i++)
-                _toolBeltSlots[i].Deselect();
+            for (int i = 0; i < _slotInitializerHandler.ToolBeltSlots.Count; i++)
+                _slotInitializerHandler.ToolBeltSlots[i].Deselect();
 
             _selectedSlotIndex = -1;
         }
 
         private void SetEquipmentItem(SlotItem slotItem)
         {
-            if (InventoryManager.Instance.InventoryEnable) return;
+            if (_inventoryWindow != null && _inventoryWindow.IsWindowEnable) return;
 
             if (_currentEquippedItem == slotItem)
             {

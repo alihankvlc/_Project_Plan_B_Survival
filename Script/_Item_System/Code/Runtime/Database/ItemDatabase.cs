@@ -11,6 +11,7 @@ namespace _Item_System_.Runtime.Database
     {
         public ItemData GetItemData(int id);
         public List<ItemData> GetItemsByType<T>() where T : ItemData;
+        public List<ItemData> GetItemByType(ItemType type);
         public List<ItemData> GetAllItems();
     }
 
@@ -21,6 +22,7 @@ namespace _Item_System_.Runtime.Database
 
 #endif
         private static ItemDatabase _instance;
+
         public static ItemDatabase Instance
         {
             get
@@ -30,12 +32,14 @@ namespace _Item_System_.Runtime.Database
                     _instance = Resources.Load<ItemDatabase>("ItemDatabase");
                     if (_instance == null)
                     {
-                        string path = $"Assets/_Project_Plan_B_Survival_Main/ScriptableObjects/Database/ItemDatabase.asset";
+                        string path =
+                            $"Assets/_Project_Plan_B_Survival_Main/ScriptableObjects/Database/ItemDatabase.asset";
 
                         _instance = CreateInstance<ItemDatabase>();
                         AssetDatabase.CreateAsset(_instance, path);
                     }
                 }
+
                 return _instance;
             }
         }
@@ -48,6 +52,12 @@ namespace _Item_System_.Runtime.Database
         }
 
         //TODO: Base sınıfa taşıycam..
+
+        public List<ItemData> GetItemByType(ItemType type)
+        {
+            List<ItemData> items = Datas.Where(r => r.ItemType == type).ToList();
+            return items;
+        }
 
         public List<ItemData> GetAllItems()
         {

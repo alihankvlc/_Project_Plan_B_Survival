@@ -16,7 +16,7 @@ namespace _Player_System_.Runtime.Common
         public int GrantExperiencePoint { get; set; }
     }
 
-    public class PlayerStatHandler : Singleton<PlayerStatHandler>, IPlayerExperienceHandler
+    public class PlayerStatHandler : MonoBehaviour, IPlayerExperienceHandler
     {
 #if UNITY_EDITOR
         [SerializeField] private int _currentExperience;
@@ -26,7 +26,6 @@ namespace _Player_System_.Runtime.Common
         private const int START_EXPERIENCE_VALUE = 45;
         private const int START_PLAYER_BASE_VALUE = 100;
 
-        //Binding
         [Inject(Id = StatGroup.Player)] private Health _health;
         [Inject(Id = StatGroup.Player)] private Experience _experience;
 
@@ -50,7 +49,6 @@ namespace _Player_System_.Runtime.Common
 
         private void Update()
         {
-            
 #if UNITY_EDITOR
             _currentExperience = _experience.CurrentExp;
             _requirementExperience = _experience.RequirementExp;

@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using _Input_System_.Code.Runtime;
 using _Inventory_System_.Code.Runtime.Common;
+using _Inventory_System_.Code.Runtime.UI;
 using Cinemachine;
 using UnityEngine;
 using Zenject;
@@ -10,18 +11,26 @@ namespace _Game_Managment.Runtime
 {
     public class PlayerCameraSettings : MonoBehaviour
     {
-        [Header("General Settings")]
-        [SerializeField] private CinemachineVirtualCamera _virtualCamera;
+        [Header("General Settings")] [SerializeField]
+        private CinemachineVirtualCamera _virtualCamera;
 
-        [Header("Zoom Settings")]
-        [SerializeField] private float _zoomAmountChangeSpeed;
+        [Header("Zoom Settings")] [SerializeField]
+        private float _zoomAmountChangeSpeed;
 
-        [Inject] IPlayerInputHandler _input;
+        private IPlayerInputHandler _playerInput;
+        private IWindowFromInventoryHandler _inventoryWindow;
 
         private float _zoomAmount;
 
         private int ORTO_MIN_ZOOM_SIZE = 2;
-        private int ORTO_MAX_ZOOM_SIZE = 5;
+        private int ORTO_MAX_ZOOM_SIZE = 6;
+
+        [Inject]
+        private void Constructor(IPlayerInputHandler input, IWindowFromInventoryHandler inventoryWindow)
+        {
+            _playerInput = input;
+            _inventoryWindow = inventoryWindow;
+        }
 
         private void Start()
         {
@@ -30,13 +39,15 @@ namespace _Game_Managment.Runtime
 
         private void Update()
         {
-            if (InventoryManager.Instance.InventoryEnable) return;
-            
-            _zoomAmount = _input.MouseScroll > 0 ? Mathf.Clamp(_zoomAmount - _zoomAmountChangeSpeed, ORTO_MIN_ZOOM_SIZE, ORTO_MAX_ZOOM_SIZE) :
-            _input.MouseScroll < 0 ? Mathf.Clamp(_zoomAmount + _zoomAmountChangeSpeed, ORTO_MIN_ZOOM_SIZE, ORTO_MAX_ZOOM_SIZE) : _zoomAmount;
+            if (_inventoryWindow.IsWindowEnable) return;
+
+            _zoomAmount = _playerInput.MouseScroll > 0
+                ? Mathf.Clamp(_zoomAmount - _zoomAmountChangeSpeed, ORTO_MIN_ZOOM_SIZE, ORTO_MAX_ZOOM_SIZE)
+                : _playerInput.MouseScroll < 0
+                    ? Mathf.Clamp(_zoomAmount + _zoomAmountChangeSpeed, ORTO_MIN_ZOOM_SIZE, ORTO_MAX_ZOOM_SIZE)
+                    : _zoomAmount;
 
             _virtualCamera.m_Lens.OrthographicSize = _zoomAmount;
         }
     }
 }
-
