@@ -54,7 +54,7 @@ public sealed class LootSlotManager : Singleton<LootSlotManager>, ILootSlotHandl
 
     private void Update()
     {
-        if (_lootWindowHandler.LootWindowEnable)
+        if (_lootWindowHandler.IsWindowEnable)
             _addLootToInventoryButton.gameObject.SetActive(SelectedLootItems().Count > 0);
     }
 
@@ -116,6 +116,7 @@ public sealed class LootSlotManager : Singleton<LootSlotManager>, ILootSlotHandl
         {
             _itemManagement.AddItemToInventory(slotItem.Data.Id, slotItem.SlotInItemCount);
             _lootableHandler.ActiveLoot.RemoveInLootItem(slotItem.Data);
+            slotItem.Slot.SetSlotStatus(SlotStatus.Empty);
         }
     }
 

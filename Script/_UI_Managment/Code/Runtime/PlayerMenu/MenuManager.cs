@@ -18,7 +18,7 @@ namespace _UI_Managment_.Runtime.Menu.Common
     public sealed class MenuManager : Singleton<MenuManager>, IMenuManager
     {
         [Header("Menu Settings")] [SerializeField]
-        private List<MenuButtonEventArgs> _menuButtonEventArgs = new();
+        private List<TabButtonEventListener> _menuButtonEventArgs = new();
 
         [SerializeField] private Menu[] _menus;
         [SerializeField] private MenuType _activeMenu = MenuType.None;
@@ -112,8 +112,8 @@ namespace _UI_Managment_.Runtime.Menu.Common
         {
             if (_activeIndex > 0)
             {
-                MenuButtonEventArgs menu = _menuButtonEventArgs.FirstOrDefault(r => r.MenuType == (MenuType)index);
-                _activeMenuSelectionLine.transform.SetParent(menu.transform, false);
+                TabButtonEventListener tab = _menuButtonEventArgs.FirstOrDefault(r => r.MenuType == (MenuType)index);
+                _activeMenuSelectionLine.transform.SetParent(tab.transform, false);
             }
         }
 

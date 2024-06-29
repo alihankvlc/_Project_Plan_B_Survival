@@ -30,6 +30,7 @@ namespace _Loot_System_.Runtime
 
         public bool IsStartingLooting => _isStartingLooting;
 
+        [SerializeField] private Transform _temp;
         public List<ItemData> LootInDatas => _lootInDatas;
 
         [Inject]
@@ -75,6 +76,7 @@ namespace _Loot_System_.Runtime
             _lootableHandler.SetActiveLootItems(this);
             _lootWindowHandler.OpenLootWindow();
 
+            _temp.DOLocalRotate(new Vector3(-110,0,0), 0.5f);
             _isOpenLoot = true;
             _isStartingLooting = false;
         }

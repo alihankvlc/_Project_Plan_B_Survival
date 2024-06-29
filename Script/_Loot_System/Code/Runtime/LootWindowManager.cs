@@ -8,7 +8,7 @@ namespace _Loot_System_.Runtime
 {
     public interface ILootWindowHandler
     {
-        public bool LootWindowEnable { get; }
+        public bool IsWindowEnable { get; }
         public void OpenLootWindow();
         public void CloseLootWindow();
     }
@@ -27,7 +27,7 @@ namespace _Loot_System_.Runtime
         private IWindowFromInventoryHandler _inventoryWindow;
         private bool _lootWindowIsEnable;
 
-        public bool LootWindowEnable => _lootWindowIsEnable;
+        public bool IsWindowEnable => _lootWindowIsEnable;
 
         [Inject]
         private void Constructor(IWindowFromInventoryHandler inventoryWindow)

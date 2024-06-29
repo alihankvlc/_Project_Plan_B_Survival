@@ -12,7 +12,7 @@ namespace _Item_System_.Runtime.Common
         [Header("Gathering Settings")] 
         [SerializeField] private float _gatheringDistance = 3f;
         [SerializeField] private LayerMask _gatheringLayerMask;
-        [SerializeField] private float _midHeightThreshold = 1f; // Mid ve Down yükseklik sınırları
+        [SerializeField] private float _midHeightThreshold = 1f;
         [SerializeField] private float _downHeightThreshold = 0.5f;
 
         private IItemManagement _itemManagement;

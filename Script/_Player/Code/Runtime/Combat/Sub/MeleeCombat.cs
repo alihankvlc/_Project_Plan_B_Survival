@@ -26,6 +26,8 @@ namespace _Player_System_.Runtime.Combat.Sub
 
         private IMeleeTriggerListener _meleeTriggerListener;
 
+        public static event Action<int, int, string> OnDamageApplied; //TODO: Base sınıfa taşıycam.
+
         [Inject]
         private void Constructor(IMeleeTriggerListener meleeTriggerListener)
         {
@@ -83,14 +85,12 @@ namespace _Player_System_.Runtime.Combat.Sub
                 if (RaycastHandler.SendRay(out RaycastHit hitInfo, _layerMask))
                 {
                     if (hitInfo.collider.TryGetComponent(out IDamageable damageable))
+                    {
                         ApplyDamage(damageable);
+                    }
 
                     return;
                 }
-                // else if (closestTarget.TryGetComponent(out IDamageable closestDamageable))
-                // {
-                //     ApplyDamage(closestDamageable);
-                // }
             }
         }
 
@@ -98,6 +98,8 @@ namespace _Player_System_.Runtime.Combat.Sub
         {
             damageable.TakeDamage(ActiveWeaponData != null ? ActiveWeaponData.Damage : 1);
             ActiveSlot.UpdateDurability(-3);
+
+            OnDamageApplied?.Invoke(damageable.CurrentValue, damageable.BaseValue, damageable.ItemName);
             PlayerComponent.ImpulseSource.GenerateImpulse();
         }
 

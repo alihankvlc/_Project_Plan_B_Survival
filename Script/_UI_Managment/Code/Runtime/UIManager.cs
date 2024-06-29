@@ -9,10 +9,12 @@ using DG.Tweening;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using _Player_System_.Runtime.Combat.Sub;
 using _Player_System_.Runtime.Common;
 using _Stat_System.Runtime.Sub;
 using _Stat_System.Runtime.UI;
 using _UI_Managment_.Runtime.Menu.Common;
+using DistantLands.Cozy;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -79,15 +81,29 @@ namespace _UI_Managment_.Runtime.Common
         [SerializeField] private Slider _lootingTimerSlider;
         [SerializeField] private GameObject _lootingTimerParent;
 
+        [Header("Time UI Settings")] [SerializeField]
+        private TextMeshProUGUI _timeTextMesh;
+
+        [Header("Player Damage UI Settings")] [SerializeField]
+        private CanvasGroup _damageableCanvasGroup;
+
+        [SerializeField] private TextMeshProUGUI _damageableLayerHealthTextMesh;
+        [SerializeField] private TextMeshProUGUI _damageableLayerName;
+        [SerializeField] private Slider _damageableSlider;
 
         private List<UIExperienceGainNotifier> _uiExperienceGainNotifierInfos = new();
         private List<UIAddedItemNotifier> _uiAddItemNotifierInfos = new();
+
+        private bool _isShowDamageInfo = false;
 
         private StatObserverManager _statObserverSubject;
         private IMenuManager _menuManager;
         private Tween _fadeInTween;
 
-        private const float FADE_IN_DELAY_DURATION = 2f;
+        private const int FADE_IN_DELAY_DURATION = 2;
+        private const int DISABLE_DAMAGE_INFO_DURATION = 3;
+
+        private float _disableDamageInfoObjectTimer;
 
         [FormerlySerializedAs("_uiAddItemToInventoryParent")] [Header("Information Settings")] [SerializeField]
         private Transform _uiPlayerInformationParent;
@@ -112,11 +128,27 @@ namespace _UI_Managment_.Runtime.Common
             PlayerStatHandler.OnExperienceGainedEvent += ExperienceGainNotifier;
 
             LootManager.OnLootTimerUpdateEvent += SetLootTimer;
+
+            MeleeCombat.OnDamageApplied += ShowDamageableLayerHealth;
         }
 
         private void Update()
         {
             _uiPlayerStatsParent.SetActive(_menuManager.ActiveMenu == MenuType.None);
+
+            int hours = CozyTimeModule.Instance.currentTime.hours;
+            int minutes = CozyTimeModule.Instance.currentTime.minutes;
+            int day = CozyTimeModule.Instance.currentDay;
+
+            UpdateTime(day, hours, minutes);
+
+            if (_isShowDamageInfo)
+            {
+                _disableDamageInfoObjectTimer -= Time.deltaTime;
+
+                if (_disableDamageInfoObjectTimer <= 0)
+                    UIResetDamageInfo();
+            }
         }
 
         public void RemoveAddedItemEvent(UIAddedItemNotifier provider)
@@ -125,6 +157,12 @@ namespace _UI_Managment_.Runtime.Common
 
             if (_uiAddItemNotifierInfos.Contains(provider))
                 _uiAddItemNotifierInfos.Remove(provider);
+        }
+
+        public void UpdateTime(int day, int hours, int minute)
+        {
+            string timeInfo = $"DAY: {day} TIME: {hours:D2}:{minute:D2}";
+            _timeTextMesh.SetText(timeInfo);
         }
 
         public void RemoveExperienceGainEvent(UIExperienceGainNotifier provider)
@@ -238,7 +276,6 @@ namespace _UI_Managment_.Runtime.Common
             string info = $"LEVEL UP! YOU ARE NOW LEVEL <color=yellow>{newLevel}</color> " +
                           $"AND HAVE <color=yellow>1</color> SKILL PONTS TO SPEND.";
 
-
             GameObjectEnableFadeIn(_levelUpInfoTextMesn.gameObject, 1.5f);
             _levelUpInfoTextMesn.SetText(info);
         }
@@ -256,6 +293,45 @@ namespace _UI_Managment_.Runtime.Common
 
             _lootingTimerSlider.maxValue = duration;
             _lootingTimerSlider.value = timer;
+        }
+
+        private void ShowDamageableLayerHealth(int health, int baseHealth, string itemName)
+        {
+            UIStartDamageInfoTimer();
+
+            if (health <= 0)
+                UIResetDamageInfo();
+
+            string info = $"{health}/{baseHealth} HP";
+
+            _damageableSlider.maxValue = baseHealth;
+            _damageableSlider.value = health;
+
+            _damageableLayerHealthTextMesh.SetText(info);
+            _damageableLayerName.SetText(itemName);
+        }
+
+        private void UIResetDamageInfo()
+        {
+            _disableDamageInfoObjectTimer = DISABLE_DAMAGE_INFO_DURATION;
+            _isShowDamageInfo = false;
+
+            _damageableCanvasGroup.DOFade(0f, 0.25f).OnComplete(() =>
+            {
+                _damageableCanvasGroup.gameObject.SetActive(false);
+            });
+        }
+
+        private void UIStartDamageInfoTimer()
+        {
+            if (!_isShowDamageInfo)
+            {
+                _isShowDamageInfo = true;
+                _damageableCanvasGroup.gameObject.SetActive(true);
+                _damageableCanvasGroup.DOFade(1f, 0.25f);
+            }
+
+            _disableDamageInfoObjectTimer = DISABLE_DAMAGE_INFO_DURATION;
         }
 
         private void GameObjectEnableFadeIn(GameObject gameObject, float time)
@@ -280,6 +356,8 @@ namespace _UI_Managment_.Runtime.Common
             Experience.OnChangeLevel -= OnPlayerLevelUp;
             PlayerStatHandler.OnExperienceGainedEvent -= ExperienceGainNotifier;
             LootManager.OnLootTimerUpdateEvent -= SetLootTimer;
+
+            MeleeCombat.OnDamageApplied -= ShowDamageableLayerHealth;
         }
     }
 }

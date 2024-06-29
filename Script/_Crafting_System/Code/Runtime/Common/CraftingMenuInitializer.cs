@@ -77,7 +77,9 @@ namespace _Crafting_System_.Runtime.Common
                     weaponBluprintTab.CraftingContent.SlotContainer
                     , CraftingType.Weapon, weaponData);
 
-                craftingItemDisplay.UpdateDisplay(weaponData, SetCraftingStatus(weaponData.CraftingRequirement));
+                //TODO:Lock icon şeysine ileride birşeyler düşünecem...
+                craftingItemDisplay.UpdateDisplay(weaponData, CraftingStatus.CanCraft);
+
                 craftingItemDisplay.SetItemLevel(1);
 
                 _craftingItemDisplays.Add(craftingItemDisplay);
@@ -118,23 +120,6 @@ namespace _Crafting_System_.Runtime.Common
             return craftableItems.Count > 0 ? craftableItems : null;
         }
 
-        //FIXME: HER REQUIREMENT ITEM ICIN NEDEN PLAYERLEVEL ISTEDIM BILMIYORUM FAKAT SADECE DATA ICIN REQUIREMENT LEVEL SORGUSU YAP!
-        private bool AllRequirementsMet(CraftingRequirement[] requirements)
-        {
-            foreach (CraftingRequirement requirement in requirements)
-                if (requirement.CheckPlayerLevel(_playerStat
-                        .Level))
-                    return false;
-
-            return true;
-        }
-
-        private CraftingStatus SetCraftingStatus(CraftingRequirement[] requirements)
-        {
-            return AllRequirementsMet(requirements) ? CraftingStatus.CanCraft : CraftingStatus.CanNotCraft;
-        }
-
-        //FIXME: Bazı item tipleri craftingType uymuyor
         private CraftingType GetCraftingType(ItemData data)
         {
             CraftingType craftingType = data.ItemType switch

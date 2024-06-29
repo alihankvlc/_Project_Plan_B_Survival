@@ -7,6 +7,14 @@ namespace _Stat_System.Runtime.Base
     public interface IDamageable
     {
         public void TakeDamage(int amount);
+        public int CurrentValue { get; }
+        public int BaseValue { get; }
+        public string ItemName { get; }
+    }
+
+    public interface IBreakable
+    {
+        public void Break();
     }
 
     public enum StatType

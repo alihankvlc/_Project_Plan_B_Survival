@@ -18,6 +18,7 @@ namespace _Item_System_.Runtime.Base
         Crafting = 1 << 0,
         Looting = 1 << 1,
         Trading = 1 << 2,
+        Mining = 1 << 3,
     }
 
     public enum ScrappableType
@@ -56,14 +57,6 @@ namespace _Item_System_.Runtime.Base
         Firearm,
     }
 
-    public enum ResourcesType
-    {
-        Coal,
-        Wood,
-        Stone,
-        Iron
-    }
-
     public enum FirearmType
     {
         Rifle,
@@ -97,15 +90,42 @@ namespace _Item_System_.Runtime.Base
         Painkillers,
         Vitamins
     }
-    
+
+    public enum MaterialType
+    {
+        Iron
+    }
+
+    public enum SmeltResult
+    {
+        None,
+        Brass,
+        Glass,
+        Clay,
+        Iron,
+        Lead,
+        Stone
+    }
+
+    public enum MineableType
+    {
+        None,
+        Coal,
+        Stone,
+        Iron
+    }
+
     public abstract class ItemData : DeletableScriptableObject, IData
     {
 #if UNITY_EDITOR
         [SerializeField, Multiline, Space] private string _Editor_Description;
 
-        private void OnValidate()
+        protected virtual void OnValidate()
         {
             if (!_isStackable) IsNotStackableItem();
+
+            if (!CanMineable(out MineableType type))
+                _mineableType = MineableType.None;
 
             if (!CanCrafting())
             {
@@ -152,12 +172,16 @@ namespace _Item_System_.Runtime.Base
         [SerializeField, ShowIf(nameof(CanCrafting))]
         private float _craftingDuration;
 
+        [SerializeField, ShowIf(nameof(CanMineable))]
+        private MineableType _mineableType;
+
         public int Id => _dataId;
         public string DisplayName => _displayName;
         public string DisplayDescription => _displayDescription;
         public Sprite Icon => _icon;
         public ItemType ItemType => _itemType;
         public Rarity RarityType => _rarity;
+        public MineableType MineableType => _mineableType;
         public bool Stackable => _isStackable;
         public bool IsSrappable => _isScrappable;
         public int StackCapacity => _stackCapacity;
@@ -166,8 +190,23 @@ namespace _Item_System_.Runtime.Base
         public int SellPrice => _sellPrice;
         public ObtainableType ObtainableType => _obtainableType;
         public CraftingRequirement[] CraftingRequirement => _craftingRequirement;
-        public bool CanCrafting() => (_obtainableType & ObtainableType.Crafting) != 0;
-        public bool IsLootable() => (_obtainableType & ObtainableType.Looting) != 0;
+
+        public bool CanCrafting()
+        {
+            return (_obtainableType & ObtainableType.Crafting) != 0;
+        }
+
+        public bool IsLootable()
+        {
+            return (_obtainableType & ObtainableType.Looting) != 0;
+        }
+
+        public bool CanMineable(out MineableType mineableType)
+        {
+            mineableType = _mineableType;
+            return (_obtainableType & ObtainableType.Mining) != 0;
+        }
+
         public void Set_Item_Id(int id) => _dataId = id;
         public void Set_Item_Display_Name(string name) => _displayName = name;
         public void Set_Item_Display_Description(string description) => _displayDescription = description;

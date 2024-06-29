@@ -42,12 +42,12 @@ namespace _Inventory_System_.Code.Runtime.UI
         private void Update()
         {
             if ((_input.Inventory || Input.GetKeyDown(KeyCode.Escape) && _inventoryWindowIsEnable) &&
-                !_lootWindowHandler.LootWindowEnable)
+                !_lootWindowHandler.IsWindowEnable)
             {
                 ToggleInventory();
             }
 
-            bool isLootWindowEnable = _lootWindowHandler.LootWindowEnable;
+            bool isLootWindowEnable = _lootWindowHandler.IsWindowEnable;
         }
 
         private void ToggleInventory()

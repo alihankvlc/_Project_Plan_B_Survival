@@ -1,11 +1,18 @@
-﻿using _Input_System_.Code.Runtime;
+﻿using System;
+using _Input_System_.Code.Runtime;
 using UnityEngine;
+using UnityEngine.Serialization;
 using Zenject;
 
 namespace _Player_System_.Runtime.Common
 {
+    public interface INoiseMaker
+    {
+        public float NoiseLevel { get; }
+    }
+
     [RequireComponent(typeof(Animator), typeof(CharacterController))]
-    public sealed class PlayerMovement : MonoBehaviour
+    public sealed class PlayerMovement : MonoBehaviour, INoiseMaker
     {
         [Header("Movement Settings")] [SerializeField]
         private float _walkSpeed = 2f;
@@ -29,6 +36,12 @@ namespace _Player_System_.Runtime.Common
         [Header("Crouch  Settings")] [SerializeField]
         private bool _crouchObstacleDetection = false;
 
+        [Header("Noise Settings")] [SerializeField]
+        private float _walkNoiseLevel;
+
+        [SerializeField] private float _runNoiseLevel;
+        [SerializeField] private float _crouchNoiseLevel;
+
         [SerializeField] private float _obstacleDetectionOffset = 1.35f;
         [SerializeField] private float _obstacleDetectionRadius = 0.15f;
         [SerializeField] private Vector3 _crouchCenter = new Vector3(0f, 0.57f, 0f);
@@ -44,11 +57,15 @@ namespace _Player_System_.Runtime.Common
         private float _hVelocityInput = 0f;
         private float _vVelocityInput = 0f;
 
+        private float _noiseLevel;
+
         private Animator _animator;
         private CharacterController _controller;
 
         private IPlayerInputHandler _input;
+        private IPlayerComponent _component;
 
+        private Camera _mainCamera;
 
         private readonly int MOVE_HASH_ID = Animator.StringToHash("OnMove");
         private readonly int GROUNDED_HASH_ID = Animator.StringToHash("OnGround");
@@ -56,10 +73,13 @@ namespace _Player_System_.Runtime.Common
         private readonly int H_VELOCITY_HASH_ID = Animator.StringToHash("H_Velocity");
         private readonly int V_VELOCITY_HASH_ID = Animator.StringToHash("V_Velocity");
 
+        public float NoiseLevel { get; private set; }
+
         [Inject]
-        public void Construct(IPlayerInputHandler inputProvider)
+        public void Construct(IPlayerInputHandler inputProvider, IPlayerComponent playerComponent)
         {
             _input = inputProvider;
+            _component = playerComponent;
         }
 
         private void Start()
@@ -69,10 +89,23 @@ namespace _Player_System_.Runtime.Common
 
             _defaultCenter = _controller.center;
             _defaultHeight = _controller.height;
+
+            _mainCamera = Camera.main;
         }
 
         private void Update()
         {
+            if (_component.UIEnable())
+            {
+                _targetSpeed = 0;
+
+                _animator.SetFloat(H_VELOCITY_HASH_ID, 0);
+                _animator.SetFloat(V_VELOCITY_HASH_ID, 0);
+                _animator.SetFloat(MOVE_HASH_ID, 0);
+
+                return;
+            }
+
             _controller.center = _input.Crouch || CheckObstacleAbove() ? _crouchCenter : _defaultCenter;
             _controller.height = _input.Crouch || CheckObstacleAbove() ? _crouchHeight : _defaultHeight;
 
@@ -82,6 +115,8 @@ namespace _Player_System_.Runtime.Common
 
             if (_input.Crouch)
                 CheckObstacleAbove();
+
+            NoiseLevel = MakeNoise();
         }
 
         private void HandleMovement()
@@ -133,17 +168,22 @@ namespace _Player_System_.Runtime.Common
 
         private Vector3 GetMoveDirection()
         {
-            Vector3 forwardDirection = Quaternion.Euler(0, transform.eulerAngles.y, 0) * Vector3.forward;
-            Vector3 rightDirection = Quaternion.Euler(0, transform.eulerAngles.y, 0) * Vector3.right;
-
             Vector2 moveInput = _input.Move.normalized;
-            Vector3 moveDirection = moveInput.x * rightDirection + moveInput.y * forwardDirection;
 
-            moveDirection.y = 0;
+            Vector3 forwardDirection = _mainCamera.transform.forward;
+            Vector3 rightDirection = _mainCamera.transform.right;
+
+            forwardDirection.y = 0f;
+            rightDirection.y = 0f;
+
+            forwardDirection.Normalize();
+            rightDirection.Normalize();
+
+            Vector3 moveDirection = moveInput.x * rightDirection + moveInput.y * forwardDirection;
 
             _hVelocityInput = _input.Move != Vector2.zero ? moveDirection.x : 0.0f;
             _vVelocityInput = _input.Move != Vector2.zero ? moveDirection.z : 0.0f;
-            
+
             _animator.SetFloat(H_VELOCITY_HASH_ID, _hVelocityInput, _animDampTime, Time.deltaTime * 30f);
             _animator.SetFloat(V_VELOCITY_HASH_ID, _vVelocityInput, _animDampTime, Time.deltaTime * 30f);
 
@@ -154,11 +194,9 @@ namespace _Player_System_.Runtime.Common
                     _input.Crouch ? true :
                     !CheckObstacleAbove() ? false : _animator.GetBool(CROUCH_HASH_ID));
             }
-            
-            
-            return new Vector3(_input.Move.x, 0, _input.Move.y);
-        }
 
+            return moveDirection;
+        }
 
         private Vector3 GetSpherePosition(float offset)
         {
@@ -174,6 +212,26 @@ namespace _Player_System_.Runtime.Common
                 : 0f;
 
             return _targetSpeed;
+        }
+
+        private float MakeNoise()
+        {
+            if (_input.Move != Vector2.zero)
+            {
+                if (_input.Run)
+                {
+                    return _runNoiseLevel;
+                }
+
+                if (_input.Crouch)
+                {
+                    return _crouchNoiseLevel;
+                }
+
+                return _walkNoiseLevel;
+            }
+
+            return 0.0f;
         }
 
         private void OnDrawGizmos()

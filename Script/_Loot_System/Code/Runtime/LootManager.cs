@@ -37,11 +37,13 @@ public class LootSettings
     public LootType Type;
     public int Size;
 }
+
 public interface ILootableHandler
 {
     public Loot ActiveLoot { get; }
     public int LootSize { get; }
     public float LootOpeningDuration { get; }
+    public bool IsLooting { get; }
     public List<SlotItem> ActiveLootInItems { get; }
     public void GenerateLoot(List<LootSettings> lootSettings, List<ItemData> datas, Richness richness);
     public void ResetLoot(List<LootSettings> lootSettings, List<ItemData> datas, Richness richness);
@@ -68,13 +70,14 @@ public class LootManager : Singleton<LootManager>, ILootableHandler
     private ILootableHandler _lootableHandler;
     private ILootSlotHandler _lootSlotHandler;
     private ISlotManager _slotManager;
-
+    private bool _isLooting;
     private float _lootTimer;
 
     public int LootSize => _maxLootSize;
     public float LootOpeningDuration => _lootOpeningDuration;
     public List<SlotItem> ActiveLootInItems => _lootSlotInItems;
     public Loot ActiveLoot => _activeLoot;
+    public bool IsLooting => _isLooting;
 
     public delegate void LootTimerDelegate(int duration, float timer, bool isEnable);
 
@@ -96,7 +99,9 @@ public class LootManager : Singleton<LootManager>, ILootableHandler
 
     public void StartLooting(Action action)
     {
+        _isLooting = true;
         _lootTimer -= Time.deltaTime;
+
         OnLootTimerUpdateEvent?.Invoke(_lootOpeningDuration, _lootTimer, true);
 
         if (_lootTimer <= 0)
@@ -109,7 +114,9 @@ public class LootManager : Singleton<LootManager>, ILootableHandler
 
     public void StopLooting()
     {
+        _isLooting = false;
         _lootTimer = _lootOpeningDuration;
+        
         OnLootTimerUpdateEvent?.Invoke(_lootOpeningDuration, _lootTimer, false);
     }
 

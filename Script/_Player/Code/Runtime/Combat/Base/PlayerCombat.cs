@@ -37,7 +37,7 @@ namespace _Player_System_.Runtime.Combat.Base
 
         private const string ITEM_NEEDED_REPAIR_TEXT = "The item needs repair!";
         private const string GROUND_LAYER_NAME = "Ground";
-        
+
         [Inject]
         private void Constructor(IPlayerInputHandler playerInputHandler, IPlayerComponent component)
         {
@@ -57,7 +57,7 @@ namespace _Player_System_.Runtime.Combat.Base
         {
             PlayerComponent.Animator.SetBool(AIM_HASH_ID, PlayerInputHandler.Aim);
 
-            if (PlayerInputHandler.Aim)
+            if (PlayerInputHandler.Aim && !PlayerComponent.UIEnable())
             {
                 RotateTowardsMouse();
             }
@@ -67,7 +67,7 @@ namespace _Player_System_.Runtime.Combat.Base
                 return;
             }
 
-            if (PlayerInputHandler.Attack)
+            if (PlayerInputHandler.Attack && !PlayerComponent.UIEnable())
             {
                 if (ActiveSlot.SlotInItemDurability > 0)
                 {
@@ -114,7 +114,7 @@ namespace _Player_System_.Runtime.Combat.Base
             return existingClip;
         }
 
-        private void RotateTowardsMouse() //TODO: PlayerAttackBehaviour sınıfına taşıycam.
+        private void RotateTowardsMouse()
         {
             if (RaycastHandler.SendRay(out RaycastHit hitInfo, _groundLayerMask))
             {
